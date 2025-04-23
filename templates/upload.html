@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .upload-container {
+        margin-bottom: 20px;
+    }
+
+    .title {
+        color: #000000;
+    }
+
+    .error-message {
+        color: red;
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    .success-message {
+        color: green;
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    .drop-zone {
+        width: 100%;
+        max-width: 400px;
+        height: 200px;
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-weight: 500;
+        font-size: 16px;
+        cursor: pointer;
+        color: #000000;
+        border: 4px dashed #cccccc;
+        border-radius: 10px;
+        margin: 20px auto;
+        position: relative;
+    }
+
+    .drop-zone--over {
+        border-color: #000;
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .drop-zone__input {
+        display: none;
+    }
+
+    .drop-zone__button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        width: auto;
+        min-width: 120px;
+    }
+
+    .drop-zone__button:hover {
+        background-color: #333333;
+        border-color: #333333;
+    }
+</style>
+
+<div class="upload-container">
+    <h1 class="title" style="color: #000000;">LIN - Загрузка CSV файла</h1>
+    
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
+    
+    {% if filename %}
+        <div class="success-message">Загружен файл: {{ filename }}</div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('data', filename=filename) }}" class="drop-zone__button">Перейти к просмотру данных</a>
+        </div>
+    {% endif %}
+
+    <form id="upload-form" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+        <div class="drop-zone">
+            <span class="drop-zone__prompt">Перетащите CSV файл сюда или нажмите для выбора</span>
+            <button type="button" class="drop-zone__button">Выбрать файл</button>
+            <input type="file" name="file" class="drop-zone__input" accept=".csv">
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll(".drop-zone").forEach(dropZone => {
+        const input = dropZone.querySelector(".drop-zone__input");
+        const button = dropZone.querySelector(".drop-zone__button");
+        const prompt = dropZone.querySelector(".drop-zone__prompt");
+        const form = dropZone.closest('form');
+
+        // Клик по зоне загрузки
+        dropZone.addEventListener("click", (e) => {
+            if (e.target !== button) {
+                input.click();
+            }
+        });
+
+        // Клик по кнопке
+        button.addEventListener("click", () => {
+            input.click();
+        });
+
+        input.addEventListener("change", (e) => {
+            if (input.files.length) {
+                form.submit();
+            }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("drop-zone--over");
+        });
+
+        ["dragleave", "dragend"].forEach((type) => {
+            dropZone.addEventListener(type, (e) => {
+                dropZone.classList.remove("drop-zone--over");
+            });
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+
+            if (e.dataTransfer.files.length) {
+                input.files = e.dataTransfer.files;
+                form.submit();
+            }
+
+            dropZone.classList.remove("drop-zone--over");
+        });
+    });
+});
+</script>
+{% endblock %} 

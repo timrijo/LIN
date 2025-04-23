@@ -79,9 +79,11 @@
     }
 
     .error-message {
-        color: red;
+        color: #000000;
         margin: 10px 0;
         text-align: center;
+        font-size: 16px;
+        font-weight: bold;
     }
 
     .success-message {
@@ -160,14 +162,22 @@
         gap: 20px;
         margin-top: 20px;
         width: 100%;
+        position: relative;
+        height: calc(100vh - 150px);
+        overflow: hidden;
     }
 
     .id-selector {
-        flex: 0 0 150px;
+        flex: 0 0 auto;
+        min-width: 150px;
+        max-width: 200px;
         background-color: #ffffff;
         border: 1px solid #808080;
         padding: 10px;
-        height: fit-content;
+        height: 100%;
+        overflow-y: auto;
+        position: sticky;
+        top: 0;
     }
 
     .id-selector h2 {
@@ -175,13 +185,18 @@
         font-size: 16px;
         font-weight: bold;
         color: #000000;
+        position: sticky;
+        top: 0;
+        background-color: #ffffff;
+        z-index: 2;
+        padding-bottom: 5px;
     }
 
     .id-list {
         display: flex;
         flex-direction: column;
         gap: 5px;
-        max-height: 400px;
+        max-height: calc(100% - 100px);
         overflow-y: auto;
     }
 
@@ -192,6 +207,7 @@
         padding: 3px;
         font-family: monospace;
         color: #000000 !important;
+        white-space: nowrap;
     }
 
     .id-checkbox-label:hover {
@@ -206,17 +222,51 @@
     }
 
     .control-button {
-        padding: 5px 10px;
+        padding: 8px 15px;
         background-color: #f0f0f0;
         border: 1px solid #808080;
         cursor: pointer;
         color: #000000;
         width: 100%;
         text-align: center;
+        border-radius: 4px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        transition: background-color 0.2s, border-color 0.2s;
+        margin-bottom: 5px;
     }
 
     .control-button:hover {
         background-color: #e0e0e0;
+        border-color: #666666;
+    }
+
+    .control-button:active {
+        background-color: #d0d0d0;
+    }
+
+    .control-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Стиль для ссылок, оформленных как кнопки */
+    a.control-button {
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    /* Стиль для кнопок в селекторе ID */
+    .id-selector .control-button {
+        margin-bottom: 10px;
+    }
+
+    /* Стиль для кнопок в заголовке */
+    .title-container .control-button {
+        width: auto;
+        min-width: 150px;
+        margin: 10px auto;
+        display: block;
     }
 
     .id-checkbox {
@@ -231,6 +281,56 @@
     .main-content {
         flex: 1;
         min-width: 0;
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .table-section {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .graph-section {
+        flex: 0 0 300px;
+        min-width: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .table-container {
+        flex: 1;
+        overflow: auto;
+        margin-top: 0;
+    }
+    
+    .table-wrapper {
+        position: relative;
+        height: 100%;
+    }
+    
+    .graph-container {
+        width: 100%;
+        height: 150px;
+        margin: 10px 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+        padding: 10px;
+        background-color: white;
+    }
+    
+    .graph-title {
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 5px;
+        font-size: 14px;
     }
 
     /* Базовые классы для разной ширины ячеек */
@@ -251,10 +351,82 @@
         min-width: 80px;
         max-width: 80px;
     }
+
+    /* Общие стили для объемного текста */
+    .header-item, .cell-id, .highlight-cell {
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+        letter-spacing: 0.5px;
+    }
+    
+    /* Стили для ID */
+    .cell-id {
+        background-color: #f0f8ff;
+        border-radius: 3px;
+        padding: 2px 4px;
+        font-size: 1.1em;
+    }
+    
+    /* Стили для выделения последнего непустого D */
+    .highlight-cell {
+        background-color: #fff0f0;
+        border-radius: 3px;
+        padding: 2px 4px;
+        font-size: 1.1em;
+        color: #d32f2f;
+    }
+    
+    /* Стили для заголовков */
+    .header-row > span {
+        background-color: #e0e0e0;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Стили для таблицы */
+    .table-container {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    /* Стили для строк таблицы */
+    .data-row:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    .data-row:hover {
+        background-color: #f0f0f0;
+    }
+    
+    /* Стили для графика */
+    .graph-container {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+        padding: 10px;
+        background-color: white;
+    }
+    
+    /* Стили для селектора ID */
+    .id-selector {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+    }
+    
+    .id-checkbox-label {
+        transition: background-color 0.2s;
+    }
+    
+    .id-checkbox-label:hover {
+        background-color: #e0e0e0;
+    }
 </style>
 
-<div class="upload-container">
-    <h1 class="title" style="color: #000000;">LIN - Загрузка CSV файла</h1>
+<div class="title-container">
+    <h1 class="title" style="color: #000000;">LIN - Просмотр данных</h1>
     
     {% if error %}
         <div class="error-message">{{ error }}</div>
@@ -262,15 +434,10 @@
     
     {% if filename %}
         <div class="success-message">Загружен файл: {{ filename }}</div>
-    {% endif %}
-
-    <form id="upload-form" action="{{ url_for('data') }}" method="POST" enctype="multipart/form-data">
-        <div class="drop-zone">
-            <span class="drop-zone__prompt">Перетащите CSV файл сюда или нажмите для выбора</span>
-            <button type="button" class="drop-zone__button">Выбрать файл</button>
-            <input type="file" name="file" class="drop-zone__input" accept=".csv">
+        <div style="text-align: center; margin-top: 10px;">
+            <a href="{{ url_for('upload') }}" class="control-button" style="display: inline-block; width: auto; padding: 5px 15px;">Загрузить другой файл</a>
         </div>
-    </form>
+    {% endif %}
 </div>
 
 {% if messages %}
@@ -293,103 +460,119 @@
             </div>
             
             <div class="main-content">
-                <div class="table-container">
-                    <div class="table-wrapper">
-                        <div class="header-row">
-                            <span class="cell-id"><span class="header-item">ID</span></span>
-                            {% for i in range(messages[0].data|length + 1) %}
-                                <span class="cell-data"><span class="header-item">D{{ i + 1 }}</span></span>
-                            {% endfor %}
-                            <span class="cell-time"><span class="header-item">Time</span></span>
-                        </div>
-                        {% for msg in messages %}
-                            <div class="data-row" data-id="{{ msg.id }}">
-                                <span class="cell-id cell">
-                                    {% if msg.id is not none %}
-                                        {{ "%02X"|format(msg.id) }}
-                                    {% else %}
-                                        <span class="empty-cell">&nbsp;</span>
-                                    {% endif %}
-                                </span>
-                                {% for value in msg.data %}
-                                    <span class="cell-data cell">
-                                        {% if value is not none %}
-                                            {{ "%02X"|format(value) }}
+                <div class="table-section">
+                    <div class="table-container">
+                        <div class="table-wrapper">
+                            <div class="header-row">
+                                <span class="cell-id"><span class="header-item">ID</span></span>
+                                {% for i in range(messages[0].data|length + 1) %}
+                                    <span class="cell-data"><span class="header-item">D{{ i + 1 }}</span></span>
+                                {% endfor %}
+                                <span class="cell-time"><span class="header-item">Time</span></span>
+                            </div>
+                            {% for msg in messages %}
+                                <div class="data-row" data-id="{{ msg.id }}">
+                                    <span class="cell-id cell">
+                                        {% if msg.id is not none %}
+                                            {{ "%02X"|format(msg.id) }}
                                         {% else %}
                                             <span class="empty-cell">&nbsp;</span>
                                         {% endif %}
                                     </span>
-                                {% endfor %}
-                                <span class="cell-data cell">
-                                    {% if msg.crc is not none %}
-                                        {{ "%02X"|format(msg.crc) }}
-                                    {% else %}
-                                        <span class="empty-cell">&nbsp;</span>
-                                    {% endif %}
-                                </span>
-                                <span class="cell-time cell">{{ "%.3f"|format(msg.time) }}</span>
-                            </div>
-                        {% endfor %}
+                                    {% for value in msg.data %}
+                                        <span class="cell-data cell">
+                                            {% if value is not none %}
+                                                {{ "%02X"|format(value) }}
+                                            {% else %}
+                                                <span class="empty-cell">&nbsp;</span>
+                                            {% endif %}
+                                        </span>
+                                    {% endfor %}
+                                    <span class="cell-data cell">
+                                        {% if msg.crc is not none %}
+                                            {{ "%02X"|format(msg.crc) }}
+                                        {% else %}
+                                            <span class="empty-cell">&nbsp;</span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="cell-time cell">{{ "%.3f"|format(msg.time) }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
+                </div>
+                
+                <div class="graph-section">
+                    <div id="graphs-container"></div>
+                    <div id="graph-error" class="error-message" style="display: none;"></div>
                 </div>
             </div>
         </div>
     {% endif %}
 {% endif %}
 
+<!-- Добавляем библиотеку Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll(".drop-zone").forEach(dropZone => {
-        const input = dropZone.querySelector(".drop-zone__input");
-        const button = dropZone.querySelector(".drop-zone__button");
-        const prompt = dropZone.querySelector(".drop-zone__prompt");
-        const form = dropZone.closest('form');
-
-        // Клик по зоне загрузки
-        dropZone.addEventListener("click", (e) => {
-            if (e.target !== button) {
-                input.click();
-            }
-        });
-
-        // Клик по кнопке
-        button.addEventListener("click", () => {
-            input.click();
-        });
-
-        input.addEventListener("change", (e) => {
-            if (input.files.length) {
-                form.submit();
-            }
-        });
-
-        dropZone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            dropZone.classList.add("drop-zone--over");
-        });
-
-        ["dragleave", "dragend"].forEach((type) => {
-            dropZone.addEventListener(type, (e) => {
-                dropZone.classList.remove("drop-zone--over");
-            });
-        });
-
-        dropZone.addEventListener("drop", (e) => {
-            e.preventDefault();
-
-            if (e.dataTransfer.files.length) {
-                input.files = e.dataTransfer.files;
-                form.submit();
-            }
-
-            dropZone.classList.remove("drop-zone--over");
-        });
-    });
-
     const checkboxes = document.querySelectorAll('.id-checkbox');
     const selectAllBtn = document.getElementById('select-all');
     const clearAllBtn = document.getElementById('clear-all');
     const rows = document.querySelectorAll('.data-row');
+    const idList = document.querySelector('.id-list');
+
+    // Функция для получения текущего выбранного ID
+    function getSelectedId() {
+        const selectedCheckbox = document.querySelector('.id-checkbox:checked');
+        return selectedCheckbox ? parseInt(selectedCheckbox.value) : null;
+    }
+
+    // Функция для выбора ID по индексу
+    function selectIdByIndex(index) {
+        // Проверяем границы
+        if (index < 0) {
+            index = 0; // Останавливаемся на первом элементе
+        } else if (index >= checkboxes.length) {
+            index = checkboxes.length - 1; // Останавливаемся на последнем элементе
+        }
+        
+        // Снимаем все выделения
+        checkboxes.forEach(cb => cb.checked = false);
+        
+        // Выбираем ID по индексу
+        checkboxes[index].checked = true;
+        
+        updateTableVisibility();
+        updateGraphs();
+    }
+
+    // Обработчик колесика мыши
+    idList.addEventListener('wheel', function(e) {
+        e.preventDefault(); // Предотвращаем прокрутку страницы
+        
+        const currentId = getSelectedId();
+        if (currentId === null) return; // Если нет выбранного ID, ничего не делаем
+        
+        // Находим индекс текущего выбранного ID
+        let currentIndex = -1;
+        checkboxes.forEach((cb, index) => {
+            if (parseInt(cb.value) === currentId) {
+                currentIndex = index;
+            }
+        });
+        
+        if (currentIndex === -1) return; // Если ID не найден, ничего не делаем
+        
+        // Определяем направление прокрутки
+        if (e.deltaY > 0) {
+            // Прокрутка вниз - следующий ID
+            selectIdByIndex(currentIndex + 1);
+        } else {
+            // Прокрутка вверх - предыдущий ID
+            selectIdByIndex(currentIndex - 1);
+        }
+    });
 
     function updateTableVisibility() {
         const selectedIds = Array.from(checkboxes)
@@ -440,6 +623,269 @@ document.addEventListener('DOMContentLoaded', function() {
     // Вызываем функцию при загрузке и при изменении размера окна
     adjustTableWidth();
     window.addEventListener('resize', adjustTableWidth);
+
+    // Функция для выделения последнего непустого D в каждой строке
+    function highlightLastNonEmptyD() {
+        const rows = document.querySelectorAll('.data-row');
+        
+        rows.forEach(row => {
+            // Сбрасываем предыдущие выделения
+            const cells = row.querySelectorAll('.cell-data');
+            cells.forEach(cell => {
+                cell.classList.remove('highlight-cell');
+            });
+            
+            // Находим последнее непустое значение D
+            for (let i = cells.length - 1; i >= 0; i--) {
+                const cell = cells[i];
+                const isEmpty = cell.querySelector('.empty-cell') !== null;
+                
+                if (!isEmpty) {
+                    cell.classList.add('highlight-cell');
+                    break;
+                }
+            }
+        });
+    }
+    
+    // Вызываем функцию после загрузки страницы
+    highlightLastNonEmptyD();
+
+    // Графики
+    const graphsContainer = document.getElementById('graphs-container');
+    const graphError = document.getElementById('graph-error');
+    
+    if (graphsContainer) {
+        console.log('Графики: контейнер найден');
+        
+        // Проверяем, загружена ли библиотека Plotly
+        if (typeof Plotly === 'undefined') {
+            console.error('Графики: библиотека Plotly не загружена');
+            return;
+        }
+        
+        // Функция для создания графиков
+        function createGraphs(messagesData, selectedId) {
+            console.log('Графики: создание графиков с данными', messagesData, 'для ID', selectedId);
+            
+            // Фильтруем данные только для выбранного ID
+            const filteredData = messagesData.filter(msg => msg.id === selectedId);
+            
+            if (filteredData.length === 0) {
+                console.error('Графики: нет данных для выбранного ID');
+                graphError.textContent = 'Нет данных для выбранного ID';
+                graphError.style.display = 'block';
+                graphsContainer.innerHTML = '';
+                return;
+            }
+            
+            // Получаем количество байтов данных
+            const dataBytes = filteredData[0].data.length;
+            
+            // Очищаем контейнер для графиков
+            graphsContainer.innerHTML = '';
+            
+            // Создаем отдельный график для каждого непустого байта
+            let nonEmptyBytesCount = 0;
+            
+            for (let i = 0; i < dataBytes; i++) {
+                // Проверяем, есть ли непустые значения для этого байта
+                const hasNonEmptyValues = filteredData.some(msg => msg.data[i] !== null);
+                
+                if (hasNonEmptyValues) {
+                    nonEmptyBytesCount++;
+                    
+                    // Создаем контейнер для графика
+                    const graphId = `graph-${i}`;
+                    const graphDiv = document.createElement('div');
+                    graphDiv.id = graphId;
+                    graphDiv.className = 'graph-container';
+                    
+                    // Добавляем заголовок
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'graph-title';
+                    titleDiv.textContent = `D${i+1} от времени`;
+                    graphDiv.appendChild(titleDiv);
+                    
+                    // Добавляем контейнер для графика
+                    const plotDiv = document.createElement('div');
+                    plotDiv.style.width = '100%';
+                    plotDiv.style.height = '100%';
+                    graphDiv.appendChild(plotDiv);
+                    
+                    // Добавляем график в контейнер
+                    graphsContainer.appendChild(graphDiv);
+                    
+                    // Подготавливаем данные для графика
+                    const times = filteredData.map(msg => msg.time);
+                    const values = filteredData.map(msg => msg.data[i]);
+                    
+                    const graphData = [{
+                        x: times,
+                        y: values,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        line: {
+                            width: 2,
+                            color: '#1f77b4'
+                        },
+                        marker: {
+                            size: 6,
+                            color: '#1f77b4'
+                        },
+                        hoverinfo: 'y',
+                        hovertemplate: '%{y:02X}<extra></extra>',
+                        showlegend: false
+                    }];
+                    
+                    // Настройки графика
+                    const layout = {
+                        title: {
+                            text: '',
+                            font: {
+                                size: 0
+                            }
+                        },
+                        xaxis: {
+                            title: '',
+                            gridcolor: '#ddd',
+                            showgrid: true,
+                            showspikes: false,
+                            fixedrange: true
+                        },
+                        yaxis: {
+                            title: `D${i+1}`,
+                            gridcolor: '#ddd',
+                            showgrid: true,
+                            range: [0, 255],
+                            tickformat: 'x',
+                            showspikes: false,
+                            showticklabels: false,
+                            fixedrange: true
+                        },
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: false,
+                        hovermode: 'closest',
+                        margin: {
+                            l: 50,
+                            r: 20,
+                            t: 10,
+                            b: 40
+                        },
+                        dragmode: false
+                    };
+                    
+                    // Создаем график с отключенными всплывающими подсказками
+                    Plotly.newPlot(graphId, graphData, layout, {
+                        displayModeBar: false,
+                        responsive: true,
+                        scrollZoom: false,
+                        doubleClick: false
+                    });
+                }
+            }
+            
+            if (nonEmptyBytesCount === 0) {
+                graphError.textContent = 'Нет данных для выбранного ID';
+                graphError.style.display = 'block';
+            } else {
+                graphError.style.display = 'none';
+            }
+            
+            console.log('Графики: создано', nonEmptyBytesCount, 'графиков');
+        }
+
+        // Функция обновления графиков при изменении выбранного ID
+        function updateGraphs() {
+            const selectedCheckboxes = document.querySelectorAll('.id-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                graphError.textContent = 'Выбирите один ID, для отображения графффиков';
+                graphError.style.display = 'block';
+                graphsContainer.innerHTML = '';
+                return;
+            }
+            
+            if (selectedCheckboxes.length > 1) {
+                graphError.textContent = 'Выбирите один ID, для отображения графффиков';
+                graphError.style.display = 'block';
+                graphsContainer.innerHTML = '';
+                return;
+            }
+            
+            const selectedId = parseInt(selectedCheckboxes[0].value);
+            
+            // Если есть имя файла, загружаем данные через AJAX
+            const filenameElement = document.querySelector('.success-message');
+            if (filenameElement) {
+                const filename = filenameElement.textContent.replace('Загружен файл: ', '').trim();
+                console.log('Графики: найден файл', filename);
+                
+                // Показываем сообщение о загрузке
+                graphError.textContent = 'Загрузка данных...';
+                graphError.style.display = 'block';
+                graphsContainer.innerHTML = '';
+                
+                // Загружаем данные через AJAX
+                fetch(`/get_data?filename=${encodeURIComponent(filename)}`)
+                    .then(response => {
+                        console.log('Графики: получен ответ', response.status, response.statusText);
+                        
+                        // Проверяем статус ответа
+                        if (!response.ok) {
+                            // Пытаемся получить текст ошибки из ответа
+                            return response.text().then(text => {
+                                try {
+                                    // Пробуем распарсить как JSON
+                                    const errorData = JSON.parse(text);
+                                    throw new Error(errorData.error || `Ошибка сервера: ${response.status} ${response.statusText}`);
+                                } catch (e) {
+                                    // Если не удалось распарсить как JSON, используем текст ответа
+                                    throw new Error(`Ошибка сервера: ${response.status} ${response.statusText}. ${text}`);
+                                }
+                            });
+                        }
+                        
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Графики: получены данные', data);
+                        
+                        if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                            createGraphs(data.messages, selectedId);
+                        } else {
+                            console.error('Графики: данные не получены или пусты');
+                            graphError.textContent = 'Данные не получены или пусты';
+                            graphError.style.display = 'block';
+                            graphsContainer.innerHTML = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Графики: ошибка:', error);
+                        graphError.textContent = 'Ошибка загрузки данных: ' + error.message;
+                        graphError.style.display = 'block';
+                        graphsContainer.innerHTML = '';
+                    });
+            } else {
+                console.log('Графики: файл не найден');
+                graphError.textContent = 'Файл не загружен';
+                graphError.style.display = 'block';
+                graphsContainer.innerHTML = '';
+            }
+        }
+
+        // Добавляем обработчики событий для чекбоксов
+        const checkboxes = document.querySelectorAll('.id-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateGraphs);
+        });
+
+        // Обновляем графики при загрузке страницы
+        updateGraphs();
+    } else {
+        console.log('Графики: контейнер не найден');
+    }
 });
 </script>
 {% endblock %} 
