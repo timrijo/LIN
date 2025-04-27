@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import os
 from lin_msg import LinMsg
+import json
+import csv
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -94,45 +96,103 @@ def logout():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def process_csv_data(filepath):
+def save_processed_data(messages, filename):
+    """
+    Сохраняет обработанные данные в отдельный файл.
+    Args:
+        messages: список объектов LinMsg
+        filename: имя исходного файла
+    """
     try:
-        # Читаем файл, пропуская первую строку
-        df = pd.read_csv(filepath, 
-                        header=None, 
-                        skiprows=1,
-                        on_bad_lines='skip')  # Пропускать проблемные строки
+        # Создаем имя для файла с обработанными данными
+        processed_filename = f"processed_{filename}"
+        processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], processed_filename)
         
-        # Список для хранения сообщений
-        messages = []
-        
-        # Проходим по каждой строке
-        for index, row in df.iterrows():
-            try:
-                time_value = float(row[0])
-                
-                # Собираем данные из строки через один столбец (формула 2n+5)
-                values = []
-                for col_idx in range(5, len(row), 2):
-                    try:
-                        value = str(row[col_idx]).replace('0x', '').strip()
-                        if value:
-                            values.append(int(value, 16))
-                        else:
-                            values.append(None)
-                    except ValueError:
-                        values.append(None)
-                
-                # Создаем объект LinMsg
-                if values:  # Если есть хотя бы одно значение
-                    lin_msg = LinMsg.from_row_data(time_value, values)
-                    messages.append(lin_msg)
-            except Exception as e:
-                print(f"Ошибка в строке {index + 2}: {str(e)}")
-                continue
-        
-        return messages
+        # Сохраняем данные в JSON файл, каждое сообщение в отдельной строке
+        with open(processed_filepath, 'w', encoding='utf-8') as f:
+            for msg in messages:
+                data_to_save = {
+                    'id': msg.id,
+                    'data': msg.data,
+                    'crc': msg.crc,
+                    'time': msg.time
+                }
+                json.dump(data_to_save, f, ensure_ascii=False)
+                f.write('\n')  # Добавляем перенос строки после каждого сообщения
+            
+        return processed_filename
     except Exception as e:
-        raise Exception(f'Ошибка обработки файла: {str(e)}')
+        return None
+
+def process_csv_data(csv_data):
+    """Обрабатывает данные CSV и возвращает список объектов LinMsg"""
+    messages = []
+    reader = csv.reader(csv_data.splitlines())
+    
+    # Пропускаем заголовок
+    next(reader)
+    
+    for row in reader:
+        if not row:  # Пропускаем пустые строки
+            continue
+            
+        try:
+            # Проверяем минимальное количество столбцов
+            if len(row) < 7:  # Минимум 7 столбцов: время, Break, время, SYNC, время, PID, время
+                continue
+                
+            # Столбец 0: время начала сообщения
+            time_value = float(row[0])
+            
+            # Столбец 1: Break (должен быть 0x00)
+            if row[1] != '0x00':
+                continue
+            
+            # Столбец 3: SYNC (должен быть 0x55)
+            if row[3] != '0x55':
+                continue
+            
+            # Столбец 5: PID (сохраняем как ID)
+            msg_id = None
+            if row[5].startswith('0x'):
+                msg_id = int(row[5], 16)
+            else:
+                msg_id = int(row[5])
+            
+            # Обрабатываем данные (столбцы 7 и далее через один)
+            data = []
+            crc = None
+            
+            # Начинаем с 7-го столбца и берем каждый второй столбец до предпоследнего
+            for i in range(7, len(row) - 1, 2):
+                try:
+                    value = row[i]
+                    if value.startswith('0x'):
+                        value_int = int(value, 16)
+                    else:
+                        value_int = int(value)
+                    data.append(value_int)
+                except (IndexError, ValueError):
+                    data.append(None)
+            
+            # CRC берется из последнего столбца
+            try:
+                crc_value = row[-1]  # Последний столбец
+                if crc_value.startswith('0x'):
+                    crc = int(crc_value, 16)
+                else:
+                    crc = int(crc_value)
+            except (IndexError, ValueError):
+                crc = None
+            
+            # Создаем объект сообщения
+            msg = LinMsg(msg_id, data, crc, time_value)
+            messages.append(msg)
+            
+        except Exception:
+            continue
+    
+    return messages
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -143,28 +203,40 @@ def upload():
     error = None
 
     if request.method == 'POST':
-        # Проверяем, есть ли файл в запросе
-        if 'file' not in request.files:
-            error = 'Файл не был загружен'
-            return render_template('upload.html', error=error)
-        
-        file = request.files['file']
-        
-        # Проверяем, был ли выбран файл
-        if file.filename == '':
-            error = 'Файл не выбран'
-            return render_template('upload.html', error=error)
-        
-        # Проверяем расширение файла
-        if not allowed_file(file.filename):
-            error = 'Разрешены только CSV файлы'
-            return render_template('upload.html', error=error)
-        
         try:
+            # Проверяем, есть ли файл в запросе
+            if 'file' not in request.files:
+                error = 'Файл не был загружен'
+                return render_template('upload.html', error=error)
+            
+            file = request.files['file']
+            
+            # Проверяем, был ли выбран файл
+            if file.filename == '':
+                error = 'Файл не выбран'
+                return render_template('upload.html', error=error)
+            
+            # Проверяем расширение файла
+            if not allowed_file(file.filename):
+                error = 'Разрешены только CSV файлы'
+                return render_template('upload.html', error=error)
+            
             # Сохраняем файл
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
+            
+            # Обрабатываем данные и сохраняем в отдельный файл
+            with open(filepath, 'r', encoding='utf-8') as f:
+                messages = process_csv_data(f.read())
+            
+            processed_filename = save_processed_data(messages, filename)
+            
+            if not processed_filename:
+                error = 'Ошибка при сохранении обработанных данных'
+                return render_template('upload.html', error=error)
+            
+            return redirect(url_for('data', filename=filename))
             
         except Exception as e:
             error = f'Ошибка загрузки файла: {str(e)}'
@@ -182,80 +254,48 @@ def data():
     messages = None
     error = None
     unique_ids = None
-    debug_info = []  # Список для хранения отладочной информации
 
     if not filename:
         return redirect(url_for('upload'))
     
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    if not os.path.exists(filepath):
-        error = f'Файл {filename} не найден'
-        return render_template('data.html', error=error)
-    
     try:
-        # Обрабатываем данные
-        df = pd.read_csv(filepath, 
-                        header=None, 
-                        skiprows=1,
-                        on_bad_lines='skip')
+        # Формируем имя файла с обработанными данными
+        processed_filename = f"processed_{filename}"
+        processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], processed_filename)
         
-        debug_info.append(f"Всего строк в файле: {len(df)}")
+        # Проверяем существование файла
+        if not os.path.exists(processed_filepath):
+            error = f'Файл с обработанными данными не найден'
+            return render_template('data.html', error=error)
         
-        # Список для хранения сообщений
+        # Читаем данные из файла построчно
         messages = []
-        
-        # Проходим по каждой строке
-        for index, row in df.iterrows():
-            try:
-                time_value = float(row[0])
-                
-                # Собираем данные из строки через один столбец (формула 2n+5)
-                values = []
-                for col_idx in range(5, len(row), 2):
-                    try:
-                        value = str(row[col_idx]).replace('0x', '').strip()
-                        if value:
-                            values.append(int(value, 16))
-                        else:
-                            values.append(None)
-                    except ValueError:
-                        values.append(None)
-                
-                # Добавляем информацию о текущей строке
-                debug_info.append(f"Строка {index + 2}:")
-                debug_info.append(f"  Временная метка: {time_value}")
-                debug_info.append(f"  Количество значений: {len(values)}")
-                debug_info.append(f"  Значения: {values}")
-                
-                # Создаем объект LinMsg
-                if values:  # Если есть хотя бы одно значение
-                    lin_msg = LinMsg.from_row_data(time_value, values)
+        with open(processed_filepath, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():  # Пропускаем пустые строки
+                    msg_data = json.loads(line)
+                    # Создаем объект LinMsg из данных
+                    lin_msg = LinMsg(
+                        msg_id=msg_data['id'],
+                        data=msg_data['data'],
+                        crc=msg_data['crc'],
+                        time=msg_data['time']
+                    )
                     messages.append(lin_msg)
-                    debug_info.append(f"  Создан объект LinMsg: {lin_msg}")
-                else:
-                    debug_info.append(f"  Нет значений для создания LinMsg")
-                
-            except Exception as e:
-                debug_info.append(f"Ошибка в строке {index + 2}: {str(e)}")
-                continue
-        
-        debug_info.append(f"Всего обработано сообщений: {len(messages)}")
         
         # Получаем уникальные ID
         if messages:
-            unique_ids = LinMsg.get_unique_ids(messages)
+            unique_ids = sorted(set(msg.id for msg in messages if msg.id is not None))
         
     except Exception as e:
-        error = f'Ошибка обработки файла: {str(e)}'
+        error = f'Ошибка загрузки данных: {str(e)}'
         return render_template('data.html', error=error)
 
     return render_template('data.html', 
                          messages=messages, 
                          filename=filename, 
                          error=error, 
-                         unique_ids=unique_ids,
-                         debug_info=debug_info)  # Передаем отладочную информацию в шаблон
+                         unique_ids=unique_ids)
 
 @app.route('/get_data')
 def get_data():
@@ -269,30 +309,50 @@ def get_data():
     if not filename:
         return jsonify({'error': 'Имя файла не указано'}), 400
     
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    if not os.path.exists(filepath):
-        return jsonify({'error': f'Файл {filename} не найден'}), 404
-    
     try:
-        # Обрабатываем данные
-        messages = process_csv_data(filepath)
+        # Формируем имя файла с обработанными данными
+        processed_filename = f"processed_{filename}"
+        processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], processed_filename)
         
-        # Преобразуем объекты LinMsg в словари для JSON
+        # Проверяем существование файла
+        if not os.path.exists(processed_filepath):
+            return jsonify({'error': f'Файл с обработанными данными не найден'}), 404
+        
+        # Читаем данные из файла построчно
         messages_data = []
-        for msg in messages:
-            msg_dict = {
-                'id': msg.id,
-                'data': msg.data,
-                'crc': msg.crc,
-                'time': msg.time
-            }
-            messages_data.append(msg_dict)
+        with open(processed_filepath, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():  # Пропускаем пустые строки
+                    messages_data.append(json.loads(line))
         
         return jsonify({'messages': messages_data})
     
     except Exception as e:
-        return jsonify({'error': f'Ошибка обработки файла: {str(e)}'}), 500
+        return jsonify({'error': f'Ошибка загрузки данных: {str(e)}'}), 500
+
+class LinMsg:
+    def __init__(self, msg_id, data, crc, time):
+        self.id = msg_id
+        self.data = data
+        self.crc = crc
+        self.time = time
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'data': self.data,
+            'crc': self.crc,
+            'time': self.time
+        }
+    
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            msg_id=data.get('id'),
+            data=data.get('data', []),
+            crc=data.get('crc'),
+            time=data.get('time')
+        )
 
 if __name__ == '__main__':
     with app.app_context():

@@ -7,7 +7,10 @@ class LinMsg:
 
     def __str__(self):
         data_str = ', '.join([f'0x{x:02X}' if x is not None else 'None' for x in self.data])
-        return f"ID: 0x{self.id:02X if self.id is not None else 'None'}, Data: [{data_str}], CRC: 0x{self.crc:02X if self.crc is not None else 'None'}, Time: {self.time:.3f if self.time is not None else 'None'}"
+        id_str = f'0x{self.id:02X}' if self.id is not None else 'None'
+        crc_str = f'0x{self.crc:02X}' if self.crc is not None else 'None'
+        time_str = f'{self.time:.3f}' if self.time is not None else 'None'
+        return f"ID: {id_str}, Data: [{data_str}], CRC: {crc_str}, Time: {time_str}"
 
     @classmethod
     def from_row_data(cls, time_value, values):
