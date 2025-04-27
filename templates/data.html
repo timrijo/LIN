@@ -208,10 +208,13 @@
         font-family: monospace;
         color: #000000 !important;
         white-space: nowrap;
+        border-radius: 3px;
+        margin: 2px 0;
+        transition: background-color 0.2s;
     }
 
     .id-checkbox-label:hover {
-        background-color: #f0f0f0;
+        background-color: rgba(0, 0, 0, 0.05);
     }
 
     .control-buttons {
@@ -369,11 +372,11 @@
     
     /* Стили для выделения последнего непустого D */
     .highlight-cell {
-        background-color: #fff0f0;
+        background-color: inherit;
         border-radius: 3px;
         padding: 2px 4px;
         font-size: 1.1em;
-        color: #d32f2f;
+        color: #006400;
     }
     
     /* Стили для заголовков */
@@ -423,6 +426,66 @@
     .id-checkbox-label:hover {
         background-color: #e0e0e0;
     }
+
+    /* Стили для цветов ID */
+    .id-color-0 { background-color: #e0f0ff; } /* More saturated Alice Blue */
+    .id-color-1 { background-color: #ffe0e0; } /* More saturated Misty Rose */
+    .id-color-2 { background-color: #e0ffe0; } /* More saturated Honeydew */
+    .id-color-3 { background-color: #e0e0ff; } /* More saturated Lavender */
+    .id-color-4 { background-color: #ffe8e0; } /* More saturated Floral White */
+    .id-color-5 { background-color: #f0f0e0; } /* More saturated Ivory */
+    .id-color-6 { background-color: #e0f0e0; } /* More saturated Mint Cream */
+    .id-color-7 { background-color: #f0e0f0; } /* More saturated Lavender Blush */
+    .id-color-8 { background-color: #e0e0f0; } /* More saturated Ghost White */
+    .id-color-9 { background-color: #f0f0f0; } /* More saturated White Smoke */
+    
+    /* Стили для ячеек ID */
+    .cell-id {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+        letter-spacing: 0.5px;
+        border-radius: 3px;
+        padding: 2px 4px;
+        font-size: 1.1em;
+    }
+    
+    /* Стили для списка ID */
+    .id-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px;
+        font-family: monospace;
+        color: #000000 !important;
+        white-space: nowrap;
+        border-radius: 3px;
+        margin: 2px 0;
+        transition: background-color 0.2s;
+    }
+    
+    .id-checkbox-label:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Стили для цветных меток в списке ID */
+    .id-list .id-color-0,
+    .id-list .id-color-1,
+    .id-list .id-color-2,
+    .id-list .id-color-3,
+    .id-list .id-color-4,
+    .id-list .id-color-5,
+    .id-list .id-color-6,
+    .id-list .id-color-7,
+    .id-list .id-color-8,
+    .id-list .id-color-9 {
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
 </style>
 
 <div class="title-container">
@@ -451,7 +514,7 @@
                 </div>
                 <div class="id-list">
                     {% for id in unique_ids %}
-                        <label class="id-checkbox-label">
+                        <label class="id-checkbox-label id-color-{{ loop.index0 % 10 }}">
                             <input type="checkbox" class="id-checkbox" value="{{ id }}" checked>
                             {{ "%02X"|format(id) }}
                         </label>
@@ -465,14 +528,16 @@
                         <div class="table-wrapper">
                             <div class="header-row">
                                 <span class="cell-id"><span class="header-item">ID</span></span>
-                                {% for i in range(messages[0].data|length + 1) %}
-                                    <span class="cell-data"><span class="header-item">D{{ i + 1 }}</span></span>
+                                {% set max_columns = messages|map(attribute='data')|map('length')|max %}
+                                {% for i in range(max_columns) %}
+                                    <span class="cell-data"><span class="header-item">D{{ i }}</span></span>
                                 {% endfor %}
+                                <span class="cell-data"><span class="header-item">CRC</span></span>
                                 <span class="cell-time"><span class="header-item">Time</span></span>
                             </div>
                             {% for msg in messages %}
                                 <div class="data-row" data-id="{{ msg.id }}">
-                                    <span class="cell-id cell">
+                                    <span class="cell-id cell id-color-{{ unique_ids.index(msg.id) % 10 if msg.id in unique_ids else 0 }}">
                                         {% if msg.id is not none %}
                                             {{ "%02X"|format(msg.id) }}
                                         {% else %}
@@ -486,6 +551,11 @@
                                             {% else %}
                                                 <span class="empty-cell">&nbsp;</span>
                                             {% endif %}
+                                        </span>
+                                    {% endfor %}
+                                    {% for i in range(max_columns - msg.data|length) %}
+                                        <span class="cell-data cell">
+                                            <span class="empty-cell">&nbsp;</span>
                                         </span>
                                     {% endfor %}
                                     <span class="cell-data cell">
