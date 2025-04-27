@@ -832,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Добавляем заголовок
                     const titleDiv = document.createElement('div');
                     titleDiv.className = 'graph-title';
-                    titleDiv.textContent = `D${i+1} от времени`;
+                    titleDiv.textContent = `D${i} от времени`;
                     graphDiv.appendChild(titleDiv);
                     
                     // Добавляем контейнер для графика
@@ -882,7 +882,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             fixedrange: true
                         },
                         yaxis: {
-                            title: `D${i+1}`,
+                            title: `D${i}`,
                             gridcolor: '#ddd',
                             showgrid: true,
                             range: [0, 255],
