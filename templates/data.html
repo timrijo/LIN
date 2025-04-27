@@ -950,7 +950,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
                 
-                fetch(`/get_data?filename=${encodeURIComponent(filename)}`)
+                fetch(`/data?filename=${encodeURIComponent(filename)}&format=json`)
                     .then(response => {
                         console.log('Ответ сервера:', response.status);
                         if (!response.ok) {
@@ -976,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (frequencyGraph) {
                                 console.log('Контейнер частотного графика найден');
                                 createFrequencyGraph(data.messages);
-                        } else {
+                            } else {
                                 console.error('Контейнер частотного графика не найден');
                             }
                             
@@ -1038,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const filenameElement = document.querySelector('.success-message');
             if (filenameElement) {
                 const filename = filenameElement.textContent.replace('Загружен файл: ', '').trim();
-                fetch(`/get_data?filename=${encodeURIComponent(filename)}`)
+                fetch(`/data?filename=${encodeURIComponent(filename)}&format=json`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {

@@ -110,11 +110,11 @@ def upload():
 @login_required
 def data():
     filename = request.args.get('filename')
-    messages = None
-    error = None
-    unique_pids = None
-
+    is_json = request.args.get('format') == 'json'
+    
     if not filename:
+        if is_json:
+            return jsonify({'error': 'Имя файла не указано'}), 400
         return redirect(url_for('upload'))
     
     try:
@@ -125,14 +125,18 @@ def data():
         # Проверяем существование файла
         if not os.path.exists(processed_filepath):
             error = f'Файл с обработанными данными не найден'
+            if is_json:
+                return jsonify({'error': error}), 404
             return render_template('data.html', error=error)
         
         # Читаем данные из файла построчно
         messages = []
+        messages_data = []
         with open(processed_filepath, 'r', encoding='utf-8') as f:
             for line in f:
                 if line.strip():  # Пропускаем пустые строки
                     msg_data = json.loads(line)
+                    messages_data.append(msg_data)
                     # Создаем объект LinMsg из данных
                     lin_msg = LinMsg(
                         msg_pid=msg_data['pid'],
@@ -143,47 +147,22 @@ def data():
                     messages.append(lin_msg)
         
         # Получаем уникальные PID
-        if messages:
-            unique_pids = sorted(set(msg.pid for msg in messages if msg.pid is not None))
+        unique_pids = sorted(set(msg.pid for msg in messages if msg.pid is not None)) if messages else None
+        
+        if is_json:
+            return jsonify({'messages': messages_data})
+        
+        return render_template('data.html', 
+                             messages=messages, 
+                             filename=filename, 
+                             error=None, 
+                             unique_pids=unique_pids)
         
     except Exception as e:
         error = f'Ошибка загрузки данных: {str(e)}'
+        if is_json:
+            return jsonify({'error': error}), 500
         return render_template('data.html', error=error)
-
-    return render_template('data.html', 
-                         messages=messages, 
-                         filename=filename, 
-                         error=error, 
-                         unique_pids=unique_pids)
-
-@app.route('/get_data')
-@login_required
-def get_data():
-    filename = request.args.get('filename')
-    
-    if not filename:
-        return jsonify({'error': 'Имя файла не указано'}), 400
-    
-    try:
-        # Формируем имя файла с обработанными данными
-        processed_filename = f"processed_{filename}"
-        processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], processed_filename)
-        
-        # Проверяем существование файла
-        if not os.path.exists(processed_filepath):
-            return jsonify({'error': f'Файл с обработанными данными не найден'}), 404
-        
-        # Читаем данные из файла построчно
-        messages_data = []
-        with open(processed_filepath, 'r', encoding='utf-8') as f:
-            for line in f:
-                if line.strip():  # Пропускаем пустые строки
-                    messages_data.append(json.loads(line))
-        
-        return jsonify({'messages': messages_data})
-        
-    except Exception as e:
-        return jsonify({'error': f'Ошибка загрузки данных: {str(e)}'}), 500
 
 if __name__ == '__main__':
     with app.app_context():
