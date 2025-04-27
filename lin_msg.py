@@ -1,16 +1,16 @@
 class LinMsg:
-    def __init__(self, msg_id=None, data=None, crc=None, time=None):
-        self.id = msg_id      # ID сообщения
+    def __init__(self, msg_pid=None, data=None, crc=None, time=None):
+        self.pid = msg_pid      # PID сообщения
         self.data = data if data is not None else []  # Список данных
         self.crc = crc        # Значение CRC
         self.time = time      # Временная метка
 
     def __str__(self):
         data_str = ', '.join([f'0x{x:02X}' if x is not None else 'None' for x in self.data])
-        id_str = f'0x{self.id:02X}' if self.id is not None else 'None'
+        pid_str = f'0x{self.pid:02X}' if self.pid is not None else 'None'
         crc_str = f'0x{self.crc:02X}' if self.crc is not None else 'None'
         time_str = f'{self.time:.3f}' if self.time is not None else 'None'
-        return f"ID: {id_str}, Data: [{data_str}], CRC: {crc_str}, Time: {time_str}"
+        return f"PID: {pid_str}, Data: [{data_str}], CRC: {crc_str}, Time: {time_str}"
 
     @classmethod
     def from_row_data(cls, time_value, values):
@@ -19,7 +19,7 @@ class LinMsg:
         
         Args:
             time_value (float): временная метка
-            values (list): список значений, где первый элемент - ID, 
+            values (list): список значений, где первый элемент - PID, 
                          последний - CRC, а между ними - данные
         
         Returns:
@@ -28,74 +28,74 @@ class LinMsg:
         if not values:
             return cls()
         
-        msg_id = values[0] if values else None
+        msg_pid = values[0] if values else None
         crc = values[-1] if len(values) > 1 else None
         data = values[1:-1] if len(values) > 2 else []
         
-        return cls(msg_id, data, crc, time_value)
+        return cls(msg_pid, data, crc, time_value)
 
     @staticmethod
-    def get_unique_ids(messages):
+    def get_unique_pids(messages):
         """
-        Находит все уникальные ID в списке сообщений
+        Находит все уникальные PID в списке сообщений
         
         Args:
             messages (list[LinMsg]): список сообщений
         
         Returns:
-            list[int]: отсортированный список уникальных ID (без None)
+            list[int]: отсортированный список уникальных PID (без None)
         """
-        # Собираем все уникальные ID, исключая None
-        unique_ids = {msg.id for msg in messages if msg.id is not None}
+        # Собираем все уникальные PID, исключая None
+        unique_pids = {msg.pid for msg in messages if msg.pid is not None}
         # Возвращаем отсортированный список
-        return sorted(unique_ids)
+        return sorted(unique_pids)
 
     @staticmethod
-    def group_by_id(messages):
+    def group_by_pid(messages):
         """
-        Группирует сообщения по ID
+        Группирует сообщения по PID
         
         Args:
             messages (list[LinMsg]): список сообщений
         
         Returns:
-            dict[int, list[LinMsg]]: словарь, где ключ - ID, значение - список сообщений с этим ID
+            dict[int, list[LinMsg]]: словарь, где ключ - PID, значение - список сообщений с этим PID
         """
         groups = {}
         for msg in messages:
-            if msg.id is not None:
-                if msg.id not in groups:
-                    groups[msg.id] = []
-                groups[msg.id].append(msg)
+            if msg.pid is not None:
+                if msg.pid not in groups:
+                    groups[msg.pid] = []
+                groups[msg.pid].append(msg)
         return groups
 
     @staticmethod
-    def analyze_bit_changes(messages, target_id):
+    def analyze_bit_changes(messages, target_pid):
         """
-        Анализирует изменения битов в сообщениях с указанным ID
+        Анализирует изменения битов в сообщениях с указанным PID
         
         Args:
             messages (list[LinMsg]): список всех сообщений
-            target_id (int): ID для анализа
+            target_pid (int): PID для анализа
         
         Returns:
             list[dict]: список изменений битов между последовательными сообщениями
         """
-        # Фильтруем сообщения по ID и сортируем по времени
-        id_messages = sorted(
-            [msg for msg in messages if msg.id == target_id],
+        # Фильтруем сообщения по PID и сортируем по времени
+        pid_messages = sorted(
+            [msg for msg in messages if msg.pid == target_pid],
             key=lambda x: x.time
         )
         
-        if len(id_messages) < 2:
+        if len(pid_messages) < 2:
             return []
 
         changes = []
         
         # Анализируем каждую пару последовательных сообщений
-        for i in range(len(id_messages) - 1):
-            current_msg = id_messages[i]
-            next_msg = id_messages[i + 1]
+        for i in range(len(pid_messages) - 1):
+            current_msg = pid_messages[i]
+            next_msg = pid_messages[i + 1]
             
             # Проверяем каждый байт данных
             byte_changes = []
@@ -152,13 +152,13 @@ class LinMsg:
         return result
 
     @staticmethod
-    def analyze_single_bit_changes(messages, target_id):
+    def analyze_single_bit_changes(messages, target_pid):
         """
-        Анализирует изменения одиночных битов в сообщениях с указанным ID
+        Анализирует изменения одиночных битов в сообщениях с указанным PID
         
         Args:
             messages (list[LinMsg]): список всех сообщений
-            target_id (int): ID для анализа
+            target_pid (int): PID для анализа
         
         Returns:
             list: список словарей с информацией об изменениях одиночных битов
@@ -173,22 +173,22 @@ class LinMsg:
                      ...
                  ]
         """
-        # Фильтруем сообщения по ID и сортируем по времени
-        id_messages = sorted(
-            [msg for msg in messages if msg.id == target_id],
+        # Фильтруем сообщения по PID и сортируем по времени
+        pid_messages = sorted(
+            [msg for msg in messages if msg.pid == target_pid],
             key=lambda x: x.time
         )
         
         changes = []
         
         # Нужно минимум два сообщения для сравнения
-        if len(id_messages) < 2:
+        if len(pid_messages) < 2:
             return changes
 
         # Сравниваем каждую пару последовательных сообщений
-        for i in range(len(id_messages) - 1):
-            current_msg = id_messages[i]
-            next_msg = id_messages[i + 1]
+        for i in range(len(pid_messages) - 1):
+            current_msg = pid_messages[i]
+            next_msg = pid_messages[i + 1]
             
             # Проверяем каждый байт в сообщении
             for byte_idx, (current_byte, next_byte) in enumerate(zip(current_msg.data, next_msg.data)):

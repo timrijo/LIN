@@ -167,7 +167,7 @@
         overflow: hidden;
     }
 
-    .id-selector {
+    .pid-selector {
         flex: 0 0 auto;
         min-width: 150px;
         max-width: 200px;
@@ -180,7 +180,7 @@
         top: 0;
     }
 
-    .id-selector h2 {
+    .pid-selector h2 {
         margin-bottom: 10px;
         font-size: 16px;
         font-weight: bold;
@@ -192,7 +192,7 @@
         padding-bottom: 5px;
     }
 
-    .id-list {
+    .pid-list {
         display: flex;
         flex-direction: column;
         gap: 5px;
@@ -200,7 +200,7 @@
         overflow-y: auto;
     }
 
-    .id-checkbox-label {
+    .pid-checkbox-label {
         display: flex;
         align-items: center;
         gap: 5px;
@@ -213,7 +213,7 @@
         transition: background-color 0.2s;
     }
 
-    .id-checkbox-label:hover {
+    .pid-checkbox-label:hover {
         background-color: rgba(0, 0, 0, 0.05);
     }
 
@@ -259,8 +259,8 @@
         display: inline-block;
     }
 
-    /* Стиль для кнопок в селекторе ID */
-    .id-selector .control-button {
+    /* Стиль для кнопок в селекторе PID */
+    .pid-selector .control-button {
         margin-bottom: 10px;
     }
 
@@ -272,12 +272,12 @@
         display: block;
     }
 
-    .id-checkbox {
+    .pid-checkbox {
         margin-right: 5px;
     }
 
-    .id-selector, 
-    .id-selector * {
+    .pid-selector, 
+    .pid-selector * {
         color: #000000;
     }
 
@@ -337,7 +337,7 @@
     }
 
     /* Базовые классы для разной ширины ячеек */
-    .cell-id {
+    .cell-pid {
         width: 50px;
         min-width: 50px;
         max-width: 50px;
@@ -356,14 +356,14 @@
     }
 
     /* Общие стили для объемного текста */
-    .header-item, .cell-id, .highlight-cell {
+    .header-item, .cell-pid, .highlight-cell {
         font-weight: bold;
         text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
         letter-spacing: 0.5px;
     }
     
-    /* Стили для ID */
-    .cell-id {
+    /* Стили для PID */
+    .cell-pid {
         background-color: #f0f8ff;
         border-radius: 3px;
         padding: 2px 4px;
@@ -413,34 +413,34 @@
         background-color: white;
     }
     
-    /* Стили для селектора ID */
-    .id-selector {
+    /* Стили для селектора PID */
+    .pid-selector {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         border-radius: 5px;
     }
     
-    .id-checkbox-label {
+    .pid-checkbox-label {
         transition: background-color 0.2s;
     }
     
-    .id-checkbox-label:hover {
+    .pid-checkbox-label:hover {
         background-color: #e0e0e0;
     }
 
-    /* Стили для цветов ID */
-    .id-color-0 { background-color: #e0f0ff; } /* More saturated Alice Blue */
-    .id-color-1 { background-color: #ffe0e0; } /* More saturated Misty Rose */
-    .id-color-2 { background-color: #e0ffe0; } /* More saturated Honeydew */
-    .id-color-3 { background-color: #e0e0ff; } /* More saturated Lavender */
-    .id-color-4 { background-color: #ffe8e0; } /* More saturated Floral White */
-    .id-color-5 { background-color: #f0f0e0; } /* More saturated Ivory */
-    .id-color-6 { background-color: #e0f0e0; } /* More saturated Mint Cream */
-    .id-color-7 { background-color: #f0e0f0; } /* More saturated Lavender Blush */
-    .id-color-8 { background-color: #e0e0f0; } /* More saturated Ghost White */
-    .id-color-9 { background-color: #f0f0f0; } /* More saturated White Smoke */
+    /* Стили для цветов PID */
+    .pid-color-0 { background-color: #e0f0ff; } /* More saturated Alice Blue */
+    .pid-color-1 { background-color: #ffe0e0; } /* More saturated Misty Rose */
+    .pid-color-2 { background-color: #e0ffe0; } /* More saturated Honeydew */
+    .pid-color-3 { background-color: #e0e0ff; } /* More saturated Lavender */
+    .pid-color-4 { background-color: #ffe8e0; } /* More saturated Floral White */
+    .pid-color-5 { background-color: #f0f0e0; } /* More saturated Ivory */
+    .pid-color-6 { background-color: #e0f0e0; } /* More saturated Mint Cream */
+    .pid-color-7 { background-color: #f0e0f0; } /* More saturated Lavender Blush */
+    .pid-color-8 { background-color: #e0e0f0; } /* More saturated Ghost White */
+    .pid-color-9 { background-color: #f0f0f0; } /* More saturated White Smoke */
     
-    /* Стили для ячеек ID */
-    .cell-id {
+    /* Стили для ячеек PID */
+    .cell-pid {
         width: 50px;
         min-width: 50px;
         max-width: 50px;
@@ -452,8 +452,8 @@
         font-size: 1.1em;
     }
     
-    /* Стили для списка ID */
-    .id-checkbox-label {
+    /* Стили для списка PID */
+    .pid-checkbox-label {
         display: flex;
         align-items: center;
         gap: 5px;
@@ -466,21 +466,21 @@
         transition: background-color 0.2s;
     }
     
-    .id-checkbox-label:hover {
+    .pid-checkbox-label:hover {
         background-color: rgba(0, 0, 0, 0.05);
     }
     
-    /* Стили для цветных меток в списке ID */
-    .id-list .id-color-0,
-    .id-list .id-color-1,
-    .id-list .id-color-2,
-    .id-list .id-color-3,
-    .id-list .id-color-4,
-    .id-list .id-color-5,
-    .id-list .id-color-6,
-    .id-list .id-color-7,
-    .id-list .id-color-8,
-    .id-list .id-color-9 {
+    /* Стили для цветных меток в списке PID */
+    .pid-list .pid-color-0,
+    .pid-list .pid-color-1,
+    .pid-list .pid-color-2,
+    .pid-list .pid-color-3,
+    .pid-list .pid-color-4,
+    .pid-list .pid-color-5,
+    .pid-list .pid-color-6,
+    .pid-list .pid-color-7,
+    .pid-list .pid-color-8,
+    .pid-list .pid-color-9 {
         padding: 2px 8px;
         border-radius: 3px;
         font-weight: bold;
@@ -504,19 +504,19 @@
 </div>
 
 {% if messages %}
-    {% if unique_ids %}
+    {% if unique_pids %}
         <div class="workspace">
-            <div class="id-selector">
-                <h2>Выбор ID</h2>
+            <div class="pid-selector">
+                <h2>Выбор PID</h2>
                 <div class="control-buttons">
                     <button class="control-button" id="select-all">Выбрать все</button>
                     <button class="control-button" id="clear-all">Снять выбор</button>
                 </div>
-                <div class="id-list">
-                    {% for id in unique_ids %}
-                        <label class="id-checkbox-label id-color-{{ loop.index0 % 10 }}">
-                            <input type="checkbox" class="id-checkbox" value="{{ id }}" checked>
-                            {{ "%02X"|format(id) }}
+                <div class="pid-list">
+                    {% for pid in unique_pids %}
+                        <label class="pid-checkbox-label pid-color-{{ loop.index0 % 10 }}">
+                            <input type="checkbox" class="pid-checkbox" value="{{ pid }}" checked>
+                            {{ "%02X"|format(pid) }}
                         </label>
                     {% endfor %}
                 </div>
@@ -527,7 +527,7 @@
                     <div class="table-container">
                         <div class="table-wrapper">
                             <div class="header-row">
-                                <span class="cell-id"><span class="header-item">ID</span></span>
+                                <span class="cell-pid"><span class="header-item">PID</span></span>
                                 {% set max_columns = messages|map(attribute='data')|map('length')|max %}
                                 {% for i in range(max_columns) %}
                                     <span class="cell-data"><span class="header-item">D{{ i }}</span></span>
@@ -536,10 +536,10 @@
                                 <span class="cell-time"><span class="header-item">Time</span></span>
                             </div>
                             {% for msg in messages %}
-                                <div class="data-row" data-id="{{ msg.id }}">
-                                    <span class="cell-id cell id-color-{{ unique_ids.index(msg.id) % 10 if msg.id in unique_ids else 0 }}">
-                                        {% if msg.id is not none %}
-                                            {{ "%02X"|format(msg.id) }}
+                                <div class="data-row" data-pid="{{ msg.pid }}">
+                                    <span class="cell-pid cell pid-color-{{ unique_pids.index(msg.pid) % 10 if msg.pid in unique_pids else 0 }}">
+                                        {% if msg.pid is not none %}
+                                            {{ "%02X"|format(msg.pid) }}
                                         {% else %}
                                             <span class="empty-cell">&nbsp;</span>
                                         {% endif %}
@@ -586,19 +586,19 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.id-checkbox');
+    const checkboxes = document.querySelectorAll('.pid-checkbox');
     const selectAllBtn = document.getElementById('select-all');
     const clearAllBtn = document.getElementById('clear-all');
     const rows = document.querySelectorAll('.data-row');
-    const idList = document.querySelector('.id-list');
+    const idList = document.querySelector('.pid-list');
 
-    // Функция для получения текущего выбранного ID
+    // Функция для получения текущего выбранного PID
     function getSelectedId() {
-        const selectedCheckbox = document.querySelector('.id-checkbox:checked');
+        const selectedCheckbox = document.querySelector('.pid-checkbox:checked');
         return selectedCheckbox ? parseInt(selectedCheckbox.value) : null;
     }
 
-    // Функция для выбора ID по индексу
+    // Функция для выбора PID по индексу
     function selectIdByIndex(index) {
         // Проверяем границы
         if (index < 0) {
@@ -610,7 +610,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Снимаем все выделения
         checkboxes.forEach(cb => cb.checked = false);
         
-        // Выбираем ID по индексу
+        // Выбираем PID по индексу
         checkboxes[index].checked = true;
         
         updateTableVisibility();
@@ -622,9 +622,9 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault(); // Предотвращаем прокрутку страницы
         
         const currentId = getSelectedId();
-        if (currentId === null) return; // Если нет выбранного ID, ничего не делаем
+        if (currentId === null) return; // Если нет выбранного PID, ничего не делаем
         
-        // Находим индекс текущего выбранного ID
+        // Находим индекс текущего выбранного PID
         let currentIndex = -1;
         checkboxes.forEach((cb, index) => {
             if (parseInt(cb.value) === currentId) {
@@ -632,14 +632,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        if (currentIndex === -1) return; // Если ID не найден, ничего не делаем
+        if (currentIndex === -1) return; // Если PID не найден, ничего не делаем
         
         // Определяем направление прокрутки
         if (e.deltaY > 0) {
-            // Прокрутка вниз - следующий ID
+            // Прокрутка вниз - следующий PID
             selectIdByIndex(currentIndex + 1);
         } else {
-            // Прокрутка вверх - предыдущий ID
+            // Прокрутка вверх - предыдущий PID
             selectIdByIndex(currentIndex - 1);
         }
     });
@@ -650,7 +650,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .map(cb => parseInt(cb.value));
 
         rows.forEach(row => {
-            const rowId = parseInt(row.dataset.id);
+            const rowId = parseInt(row.dataset.pid);
             row.style.display = selectedIds.includes(rowId) ? '' : 'none';
         });
     }
@@ -679,10 +679,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!headerRow) return;
 
         // Вычисляем общую минимальную ширину таблицы
-        const idWidth = 50;  // ширина столбца ID
+        const idWidth = 50;  // ширина столбца PID
         const dataWidth = 45;  // ширина столбцов данных
         const timeWidth = 80;  // ширина столбца времени
-        const dataColumns = headerRow.children.length - 2;  // общее количество столбцов минус ID и Time
+        const dataColumns = headerRow.children.length - 2;  // общее количество столбцов минус PID и Time
         
         const minTableWidth = idWidth + (dataColumns * dataWidth) + timeWidth;
         
@@ -736,14 +736,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Функция для создания графиков
         function createGraphs(messagesData, selectedId) {
-            console.log('Графики: создание графиков с данными', messagesData, 'для ID', selectedId);
+            console.log('Графики: создание графиков с данными', messagesData, 'для PID', selectedId);
             
-            // Фильтруем данные только для выбранного ID
-            const filteredData = messagesData.filter(msg => msg.id === selectedId);
+            // Фильтруем данные только для выбранного PID
+            const filteredData = messagesData.filter(msg => msg.pid === selectedId);
             
             if (filteredData.length === 0) {
-                console.error('Графики: нет данных для выбранного ID');
-                graphError.textContent = 'Нет данных для выбранного ID';
+                console.error('Графики: нет данных для выбранного PID');
+                graphError.textContent = 'Нет данных для выбранного PID';
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
                 return;
@@ -857,7 +857,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (nonEmptyBytesCount === 0) {
-                graphError.textContent = 'Нет данных для выбранного ID';
+                graphError.textContent = 'Нет данных для выбранного PID';
                 graphError.style.display = 'block';
             } else {
                 graphError.style.display = 'none';
@@ -866,19 +866,19 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Графики: создано', nonEmptyBytesCount, 'графиков');
         }
 
-        // Функция обновления графиков при изменении выбранного ID
+        // Функция обновления графиков при изменении выбранного PID
         function updateGraphs() {
-            const selectedCheckboxes = document.querySelectorAll('.id-checkbox:checked');
+            const selectedCheckboxes = document.querySelectorAll('.pid-checkbox:checked');
             
             if (selectedCheckboxes.length === 0) {
-                graphError.textContent = 'Выбирите один ID, для отображения графффиков';
+                graphError.textContent = 'Выбирите один PID, для отображения графффиков';
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
                 return;
             }
             
             if (selectedCheckboxes.length > 1) {
-                graphError.textContent = 'Выбирите один ID, для отображения графффиков';
+                graphError.textContent = 'Выбирите один PID, для отображения графффиков';
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
                 return;
@@ -946,7 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Добавляем обработчики событий для чекбоксов
-        const checkboxes = document.querySelectorAll('.id-checkbox');
+        const checkboxes = document.querySelectorAll('.pid-checkbox');
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', updateGraphs);
         });

@@ -9,6 +9,7 @@ import os
 from lin_msg import LinMsg
 import json
 import csv
+from crc import calculate_crc_enhanced
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -112,7 +113,7 @@ def save_processed_data(messages, filename):
         with open(processed_filepath, 'w', encoding='utf-8') as f:
             for msg in messages:
                 data_to_save = {
-                    'id': msg.id,
+                    'pid': msg.pid,
                     'data': msg.data,
                     'crc': msg.crc,
                     'time': msg.time
@@ -152,12 +153,12 @@ def process_csv_data(csv_data):
             if row[3] != '0x55':
                 continue
             
-            # Столбец 5: PID (сохраняем как ID)
-            msg_id = None
+            # Столбец 5: PID
+            msg_pid = None
             if row[5].startswith('0x'):
-                msg_id = int(row[5], 16)
+                msg_pid = int(row[5], 16)
             else:
-                msg_id = int(row[5])
+                msg_pid = int(row[5])
             
             # Обрабатываем данные (столбцы 7 и далее через один)
             data = []
@@ -185,8 +186,17 @@ def process_csv_data(csv_data):
             except (IndexError, ValueError):
                 crc = None
             
+            # Проверка CRC акомментирована
+            if crc is not None and msg_pid is not None and all(x is not None for x in data):
+                 from crc import calculate_crc_enhanced
+                 crc_enhanced = calculate_crc_enhanced(data, msg_pid)
+                 
+                 # Если CRC не совпадает ни с одним из методов, пропускаем сообщение
+                 if crc != crc_enhanced:
+                     continue
+            
             # Создаем объект сообщения
-            msg = LinMsg(msg_id, data, crc, time_value)
+            msg = LinMsg(msg_pid, data, crc, time_value)
             messages.append(msg)
             
         except Exception:
@@ -253,7 +263,7 @@ def data():
     filename = request.args.get('filename')
     messages = None
     error = None
-    unique_ids = None
+    unique_pids = None
 
     if not filename:
         return redirect(url_for('upload'))
@@ -276,16 +286,16 @@ def data():
                     msg_data = json.loads(line)
                     # Создаем объект LinMsg из данных
                     lin_msg = LinMsg(
-                        msg_id=msg_data['id'],
+                        msg_pid=msg_data['pid'],
                         data=msg_data['data'],
                         crc=msg_data['crc'],
                         time=msg_data['time']
                     )
                     messages.append(lin_msg)
         
-        # Получаем уникальные ID
+        # Получаем уникальные PID
         if messages:
-            unique_ids = sorted(set(msg.id for msg in messages if msg.id is not None))
+            unique_pids = sorted(set(msg.pid for msg in messages if msg.pid is not None))
         
     except Exception as e:
         error = f'Ошибка загрузки данных: {str(e)}'
@@ -295,7 +305,7 @@ def data():
                          messages=messages, 
                          filename=filename, 
                          error=error, 
-                         unique_ids=unique_ids)
+                         unique_pids=unique_pids)
 
 @app.route('/get_data')
 def get_data():
@@ -331,15 +341,15 @@ def get_data():
         return jsonify({'error': f'Ошибка загрузки данных: {str(e)}'}), 500
 
 class LinMsg:
-    def __init__(self, msg_id, data, crc, time):
-        self.id = msg_id
+    def __init__(self, msg_pid, data, crc, time):
+        self.pid = msg_pid
         self.data = data
         self.crc = crc
         self.time = time
     
     def to_dict(self):
         return {
-            'id': self.id,
+            'pid': self.pid,
             'data': self.data,
             'crc': self.crc,
             'time': self.time
@@ -348,7 +358,7 @@ class LinMsg:
     @classmethod
     def from_dict(cls, data):
         return cls(
-            msg_id=data.get('id'),
+            msg_pid=data.get('pid'),
             data=data.get('data', []),
             crc=data.get('crc'),
             time=data.get('time')
