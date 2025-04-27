@@ -62,14 +62,48 @@
         background-color: #333333;
         border-color: #333333;
     }
+
+    .progress-container {
+        display: none;
+        width: 100%;
+        max-width: 400px;
+        margin: 20px auto;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background-color: #4CAF50;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        margin-top: 10px;
+        color: #000000;
+    }
 </style>
 
 <div class="upload-container">
     <h1 class="title" style="color: #000000;">LIN - Загрузка CSV файла</h1>
     
-    {% if error %}
-        <div class="error-message">{{ error }}</div>
-    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="{{ 'success-message' if category == 'success' else 'error-message' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     
     {% if filename %}
         <div class="success-message">Загружен файл: {{ filename }}</div>
@@ -81,59 +115,100 @@
     <form id="upload-form" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
         <div class="drop-zone">
             <span class="drop-zone__prompt">Перетащите CSV файл сюда или нажмите для выбора</span>
+            <span class="drop-zone__prompt" style="font-size: 12px; margin-top: 10px;">Максимальный размер файла: 16MB</span>
             <button type="button" class="drop-zone__button">Выбрать файл</button>
             <input type="file" name="file" class="drop-zone__input" accept=".csv">
         </div>
     </form>
+
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-bar-fill"></div>
+        </div>
+        <div class="progress-text">Загрузка: 0%</div>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll(".drop-zone").forEach(dropZone => {
-        const input = dropZone.querySelector(".drop-zone__input");
-        const button = dropZone.querySelector(".drop-zone__button");
-        const prompt = dropZone.querySelector(".drop-zone__prompt");
-        const form = dropZone.closest('form');
+    const dropZone = document.querySelector(".drop-zone");
+    const input = dropZone.querySelector(".drop-zone__input");
+    const button = dropZone.querySelector(".drop-zone__button");
+    const prompt = dropZone.querySelector(".drop-zone__prompt");
+    const form = document.getElementById('upload-form');
+    const progressContainer = document.querySelector('.progress-container');
+    const progressBar = document.querySelector('.progress-bar-fill');
+    const progressText = document.querySelector('.progress-text');
 
-        // Клик по зоне загрузки
-        dropZone.addEventListener("click", (e) => {
-            if (e.target !== button) {
-                input.click();
-            }
-        });
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        document.querySelector('.upload-container').insertBefore(errorDiv, form);
+    }
 
-        // Клик по кнопке
-        button.addEventListener("click", () => {
+    function validateFile(file) {
+        if (!file) return false;
+        
+        if (!file.name.endsWith('.csv')) {
+            showError('Пожалуйста, загрузите файл с расширением .csv');
+            return false;
+        }
+        
+        if (file.size > 16 * 1024 * 1024) { // 16MB
+            showError('Размер файла не должен превышать 16MB');
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Клик по зоне загрузки
+    dropZone.addEventListener("click", (e) => {
+        if (e.target !== button) {
             input.click();
-        });
+        }
+    });
 
-        input.addEventListener("change", (e) => {
-            if (input.files.length) {
+    // Клик по кнопке
+    button.addEventListener("click", () => {
+        input.click();
+    });
+
+    input.addEventListener("change", (e) => {
+        if (input.files.length) {
+            const file = input.files[0];
+            if (validateFile(file)) {
+                progressContainer.style.display = 'block';
                 form.submit();
             }
-        });
+        }
+    });
 
-        dropZone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            dropZone.classList.add("drop-zone--over");
-        });
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drop-zone--over");
+    });
 
-        ["dragleave", "dragend"].forEach((type) => {
-            dropZone.addEventListener(type, (e) => {
-                dropZone.classList.remove("drop-zone--over");
-            });
-        });
-
-        dropZone.addEventListener("drop", (e) => {
-            e.preventDefault();
-
-            if (e.dataTransfer.files.length) {
-                input.files = e.dataTransfer.files;
-                form.submit();
-            }
-
+    ["dragleave", "dragend"].forEach((type) => {
+        dropZone.addEventListener(type, (e) => {
             dropZone.classList.remove("drop-zone--over");
         });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+
+        if (e.dataTransfer.files.length) {
+            const file = e.dataTransfer.files[0];
+            if (validateFile(file)) {
+                input.files = e.dataTransfer.files;
+                progressContainer.style.display = 'block';
+                form.submit();
+            }
+        }
+
+        dropZone.classList.remove("drop-zone--over");
     });
 });
 </script>

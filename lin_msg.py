@@ -1,3 +1,8 @@
+import csv
+import os
+import json
+from flask import current_app
+
 class LinMsg:
     def __init__(self, msg_pid=None, data=None, crc=None, time=None):
         self.pid = msg_pid      # PID сообщения
@@ -11,6 +16,126 @@ class LinMsg:
         crc_str = f'0x{self.crc:02X}' if self.crc is not None else 'None'
         time_str = f'{self.time:.3f}' if self.time is not None else 'None'
         return f"PID: {pid_str}, Data: [{data_str}], CRC: {crc_str}, Time: {time_str}"
+
+    @classmethod
+    def process_csv_data(cls, csv_data):
+        """
+        Обрабатывает данные CSV и возвращает список объектов LinMsg
+        
+        Args:
+            csv_data (str): содержимое CSV файла в виде строки
+            
+        Returns:
+            list: список объектов LinMsg
+        """
+        messages = []
+        reader = csv.reader(csv_data.splitlines())
+        
+        # Пропускаем заголовок
+        next(reader)
+        
+        for row in reader:
+            if not row:  # Пропускаем пустые строки
+                continue
+                
+            try:
+                # Проверяем минимальное количество столбцов
+                if len(row) < 7:  # Минимум 7 столбцов: время, Break, время, SYNC, время, PID, время
+                    continue
+                    
+                # Столбец 0: время начала сообщения
+                time_value = float(row[0])
+                
+                # Столбец 1: Break (должен быть 0x00)
+                if row[1] != '0x00':
+                    continue
+                
+                # Столбец 3: SYNC (должен быть 0x55)
+                if row[3] != '0x55':
+                    continue
+                
+                # Столбец 5: PID
+                msg_pid = None
+                if row[5].startswith('0x'):
+                    msg_pid = int(row[5], 16)
+                else:
+                    msg_pid = int(row[5])
+                
+                # Обрабатываем данные (столбцы 7 и далее через один)
+                data = []
+                crc = None
+                
+                # Начинаем с 7-го столбца и берем каждый второй столбец до предпоследнего
+                for i in range(7, len(row) - 1, 2):
+                    try:
+                        value = row[i]
+                        if value.startswith('0x'):
+                            value_int = int(value, 16)
+                        else:
+                            value_int = int(value)
+                        data.append(value_int)
+                    except (IndexError, ValueError):
+                        data.append(None)
+                
+                # CRC берется из последнего столбца
+                try:
+                    crc_value = row[-1]  # Последний столбец
+                    if crc_value.startswith('0x'):
+                        crc = int(crc_value, 16)
+                    else:
+                        crc = int(crc_value)
+                except (IndexError, ValueError):
+                    crc = None
+                
+                # Проверка CRC
+                if crc is not None and msg_pid is not None and all(x is not None for x in data):
+                    from crc import calculate_crc_enhanced
+                    crc_enhanced = calculate_crc_enhanced(data, msg_pid)
+                    
+                    # Если CRC не совпадает ни с одним из методов, пропускаем сообщение
+                    if crc != crc_enhanced:
+                        continue
+                
+                # Создаем объект сообщения
+                msg = cls(msg_pid, data, crc, time_value)
+                messages.append(msg)
+                
+            except Exception:
+                continue
+        
+        return messages
+
+    @staticmethod
+    def save_processed_data(messages, filename):
+        """
+        Сохраняет обработанные данные в отдельный файл.
+        Args:
+            messages: список объектов LinMsg
+            filename: имя исходного файла
+        """
+        try:
+            # Создаем имя для файла с обработанными данными
+            processed_filename = f"processed_{filename}"
+            processed_filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], processed_filename)
+            
+            print(f"Сохранение обработанных данных в файл: {processed_filepath}")
+            print(f"Количество сообщений для сохранения: {len(messages)}")
+            
+            # Сохраняем данные в JSON файл, каждое сообщение в отдельной строке
+            with open(processed_filepath, 'w', encoding='utf-8') as f:
+                for msg in messages:
+                    json.dump({
+                        'pid': msg.pid,
+                        'data': msg.data,
+                        'crc': msg.crc,
+                        'time': msg.time
+                    }, f, ensure_ascii=False)
+                    f.write('\n')
+                    
+            return processed_filepath
+        except Exception as e:
+            print(f"Ошибка при сохранении обработанных данных: {e}")
+            return None
 
     @classmethod
     def from_row_data(cls, time_value, values):
@@ -59,7 +184,7 @@ class LinMsg:
             messages (list[LinMsg]): список сообщений
         
         Returns:
-            dict[int, list[LinMsg]]: словарь, где ключ - PID, значение - список сообщений с этим PID
+            dict: словарь, где ключи - PID, значения - списки сообщений
         """
         groups = {}
         for msg in messages:
@@ -75,143 +200,81 @@ class LinMsg:
         Анализирует изменения битов в сообщениях с указанным PID
         
         Args:
-            messages (list[LinMsg]): список всех сообщений
+            messages (list[LinMsg]): список сообщений
             target_pid (int): PID для анализа
         
         Returns:
-            list[dict]: список изменений битов между последовательными сообщениями
+            list: список изменений битов
         """
-        # Фильтруем сообщения по PID и сортируем по времени
-        pid_messages = sorted(
-            [msg for msg in messages if msg.pid == target_pid],
-            key=lambda x: x.time
-        )
-        
-        if len(pid_messages) < 2:
-            return []
-
         changes = []
+        prev_data = None
         
-        # Анализируем каждую пару последовательных сообщений
-        for i in range(len(pid_messages) - 1):
-            current_msg = pid_messages[i]
-            next_msg = pid_messages[i + 1]
-            
-            # Проверяем каждый байт данных
-            byte_changes = []
-            for byte_idx, (current_byte, next_byte) in enumerate(zip(current_msg.data, next_msg.data)):
-                if current_byte is None or next_byte is None:
-                    continue
-                    
-                # Находим изменившиеся биты
-                changed_bits = current_byte ^ next_byte
-                if changed_bits != 0:
-                    # Проверяем, является ли изменение однобитовым
-                    is_single_bit = bin(changed_bits).count('1') == 1
-                    if is_single_bit:
-                        # Определяем номер изменившегося бита
-                        bit_position = bin(changed_bits)[::-1].index('1')
-                        byte_changes.append({
-                            'byte_index': byte_idx,
-                            'bit_position': bit_position,
-                            'old_value': bool(current_byte & (1 << bit_position)),
-                            'new_value': bool(next_byte & (1 << bit_position)),
-                            'time_diff': next_msg.time - current_msg.time
-                        })
-            
-            if byte_changes:
-                changes.append({
-                    'time_start': current_msg.time,
-                    'time_end': next_msg.time,
-                    'changes': byte_changes
-                })
-
+        for msg in messages:
+            if msg.pid == target_pid and msg.data:
+                if prev_data is not None:
+                    for i, (prev, curr) in enumerate(zip(prev_data, msg.data)):
+                        if prev != curr:
+                            changes.append({
+                                'time': msg.time,
+                                'bit': i,
+                                'from': prev,
+                                'to': curr
+                            })
+                prev_data = msg.data
+        
         return changes
 
     @staticmethod
     def format_bit_changes(changes):
         """
-        Форматирует результаты анализа изменений битов в читаемый вид
+        Форматирует изменения битов для отображения
         
         Args:
-            changes (list[dict]): результат работы analyze_bit_changes
+            changes (list): список изменений битов
         
         Returns:
-            list[str]: список строк с описанием изменений
+            str: отформатированная строка
         """
+        if not changes:
+            return "Нет изменений"
+        
         result = []
         for change in changes:
-            for byte_change in change['changes']:
-                result.append(
-                    f"Time: {change['time_start']:.3f} -> {change['time_end']:.3f} "
-                    f"(Δt: {byte_change['time_diff']:.3f}s), "
-                    f"Byte {byte_change['byte_index'] + 1}, "
-                    f"Bit {byte_change['bit_position']}: "
-                    f"{int(byte_change['old_value'])} -> {int(byte_change['new_value'])}"
-                )
-        return result
+            result.append(
+                f"Время: {change['time']:.3f}, "
+                f"Бит {change['bit']}: "
+                f"{change['from']} -> {change['to']}"
+            )
+        
+        return "\n".join(result)
 
     @staticmethod
     def analyze_single_bit_changes(messages, target_pid):
         """
-        Анализирует изменения одиночных битов в сообщениях с указанным PID
+        Анализирует изменения отдельных битов в сообщениях с указанным PID
         
         Args:
-            messages (list[LinMsg]): список всех сообщений
+            messages (list[LinMsg]): список сообщений
             target_pid (int): PID для анализа
         
         Returns:
-            list: список словарей с информацией об изменениях одиночных битов
-                 [
-                     {
-                         'time': время изменения,
-                         'byte_index': индекс байта,
-                         'bit_index': индекс бита,
-                         'old_value': предыдущее значение,
-                         'new_value': новое значение
-                     },
-                     ...
-                 ]
+            dict: словарь с изменениями для каждого бита
         """
-        # Фильтруем сообщения по PID и сортируем по времени
-        pid_messages = sorted(
-            [msg for msg in messages if msg.pid == target_pid],
-            key=lambda x: x.time
-        )
+        bit_changes = {}
+        prev_data = None
         
-        changes = []
+        for msg in messages:
+            if msg.pid == target_pid and msg.data:
+                if prev_data is not None:
+                    for i, (prev, curr) in enumerate(zip(prev_data, msg.data)):
+                        if prev != curr:
+                            if i not in bit_changes:
+                                bit_changes[i] = []
+                            bit_changes[i].append({
+                                'time': msg.time,
+                                'from': prev,
+                                'to': curr
+                            })
+                prev_data = msg.data
         
-        # Нужно минимум два сообщения для сравнения
-        if len(pid_messages) < 2:
-            return changes
-
-        # Сравниваем каждую пару последовательных сообщений
-        for i in range(len(pid_messages) - 1):
-            current_msg = pid_messages[i]
-            next_msg = pid_messages[i + 1]
-            
-            # Проверяем каждый байт в сообщении
-            for byte_idx, (current_byte, next_byte) in enumerate(zip(current_msg.data, next_msg.data)):
-                if current_byte is None or next_byte is None:
-                    continue
-                
-                # Находим изменившиеся биты (XOR покажет все изменённые биты как 1)
-                diff = current_byte ^ next_byte
-                
-                # Проверяем, изменился ли только один бит (число должно быть степенью двойки)
-                if diff != 0 and (diff & (diff - 1)) == 0:
-                    # Находим индекс изменившегося бита
-                    bit_index = 0
-                    while diff > 1:
-                        diff >>= 1
-                        bit_index += 1
-                    
-                    changes.append({
-                        'time': next_msg.time,
-                        'byte_index': byte_idx,
-                        'bit_index': bit_index,
-                        'old_value': bool(current_byte & (1 << bit_index)),
-                        'new_value': bool(next_byte & (1 << bit_index))
-                    })
-
-        return changes 
+        return bit_changes 
