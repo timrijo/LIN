@@ -305,6 +305,7 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
+        margin-bottom: 20px;
     }
     
     .table-container {
@@ -486,6 +487,48 @@
         font-weight: bold;
         text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
     }
+
+    .frequency-graph-section {
+        width: 100%;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+        position: relative;
+    }
+    
+    .time-controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+    
+    .time-control-button {
+        padding: 5px 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #808080;
+        cursor: pointer;
+        color: #000000;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+    
+    .time-control-button:hover {
+        background-color: #e0e0e0;
+    }
+    
+    .frequency-graph {
+        width: 100%;
+        height: 300px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+        padding: 10px;
+        background-color: white;
+    }
 </style>
 
 <div class="title-container">
@@ -579,12 +622,22 @@
             </div>
         </div>
     {% endif %}
+
+    <div class="frequency-graph-section">
+        <div class="time-controls">
+            <button class="time-control-button" id="prev-window">← Предыдущие 5с</button>
+            <button class="time-control-button" id="next-window">Следующие 5с →</button>
+        </div>
+        <div id="frequency-graph" class="frequency-graph"></div>
+    </div>
 {% endif %}
 
 <!-- Добавляем библиотеку Plotly.js -->
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
 
 <script>
+let currentTimeWindow = 0; // Текущее окно времени (0 = первые 5 секунд)
+
 document.addEventListener('DOMContentLoaded', function() {
     const checkboxes = document.querySelectorAll('.pid-checkbox');
     const selectAllBtn = document.getElementById('select-all');
@@ -656,17 +709,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateTableVisibility);
+        checkbox.addEventListener('change', () => {
+            updateTableVisibility();
+            updateGraphs();
+        });
     });
 
     selectAllBtn.addEventListener('click', () => {
         checkboxes.forEach(cb => cb.checked = true);
         updateTableVisibility();
+        updateGraphs();
     });
 
     clearAllBtn.addEventListener('click', () => {
         checkboxes.forEach(cb => cb.checked = false);
         updateTableVisibility();
+        updateGraphs();
     });
 
     function adjustTableWidth() {
@@ -868,77 +926,83 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Функция обновления графиков при изменении выбранного PID
         function updateGraphs() {
+            console.log('updateGraphs вызван');
+            
             const selectedCheckboxes = document.querySelectorAll('.pid-checkbox:checked');
+            console.log('Выбранные чекбоксы:', selectedCheckboxes.length);
             
             if (selectedCheckboxes.length === 0) {
-                graphError.textContent = 'Выбирите один PID, для отображения графффиков';
+                graphError.textContent = 'Выберите хотя бы один PID для отображения графиков';
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
                 return;
             }
             
-            if (selectedCheckboxes.length > 1) {
-                graphError.textContent = 'Выбирите один PID, для отображения графффиков';
-                graphError.style.display = 'block';
-                graphsContainer.innerHTML = '';
-                return;
-            }
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+            console.log('Выбранные PID:', selectedIds);
             
-            const selectedId = parseInt(selectedCheckboxes[0].value);
-            
-            // Если есть имя файла, загружаем данные через AJAX
             const filenameElement = document.querySelector('.success-message');
             if (filenameElement) {
                 const filename = filenameElement.textContent.replace('Загружен файл: ', '').trim();
-                console.log('Графики: найден файл', filename);
+                console.log('Имя файла:', filename);
                 
-                // Показываем сообщение о загрузке
                 graphError.textContent = 'Загрузка данных...';
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
                 
-                // Загружаем данные через AJAX
                 fetch(`/get_data?filename=${encodeURIComponent(filename)}`)
                     .then(response => {
-                        console.log('Графики: получен ответ', response.status, response.statusText);
-                        
-                        // Проверяем статус ответа
+                        console.log('Ответ сервера:', response.status);
                         if (!response.ok) {
-                            // Пытаемся получить текст ошибки из ответа
                             return response.text().then(text => {
                                 try {
-                                    // Пробуем распарсить как JSON
                                     const errorData = JSON.parse(text);
                                     throw new Error(errorData.error || `Ошибка сервера: ${response.status} ${response.statusText}`);
                                 } catch (e) {
-                                    // Если не удалось распарсить как JSON, используем текст ответа
                                     throw new Error(`Ошибка сервера: ${response.status} ${response.statusText}. ${text}`);
                                 }
                             });
                         }
-                        
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Графики: получены данные', data);
+                        console.log('Получены данные:', data);
                         
                         if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-                            createGraphs(data.messages, selectedId);
+                            console.log('Количество сообщений:', data.messages.length);
+                            
+                            // Создаем график частоты сообщений
+                            const frequencyGraph = document.getElementById('frequency-graph');
+                            if (frequencyGraph) {
+                                console.log('Контейнер частотного графика найден');
+                                createFrequencyGraph(data.messages);
+                            } else {
+                                console.error('Контейнер частотного графика не найден');
+                            }
+                            
+                            // Создаем графики данных только если выбран ровно один PID
+                            if (selectedIds.length === 1) {
+                                createGraphs(data.messages, selectedIds[0]);
+                            } else {
+                                graphError.textContent = 'Для отображения графиков данных выберите ровно один PID';
+                                graphError.style.display = 'block';
+                                graphsContainer.innerHTML = '';
+                            }
                         } else {
-                            console.error('Графики: данные не получены или пусты');
+                            console.error('Данные не получены или пусты');
                             graphError.textContent = 'Данные не получены или пусты';
                             graphError.style.display = 'block';
                             graphsContainer.innerHTML = '';
                         }
                     })
                     .catch(error => {
-                        console.error('Графики: ошибка:', error);
+                        console.error('Ошибка загрузки данных:', error);
                         graphError.textContent = 'Ошибка загрузки данных: ' + error.message;
                         graphError.style.display = 'block';
                         graphsContainer.innerHTML = '';
                     });
             } else {
-                console.log('Графики: файл не найден');
+                console.error('Элемент с именем файла не найден');
                 graphError.textContent = 'Файл не загружен';
                 graphError.style.display = 'block';
                 graphsContainer.innerHTML = '';
@@ -951,11 +1015,166 @@ document.addEventListener('DOMContentLoaded', function() {
             checkbox.addEventListener('change', updateGraphs);
         });
 
-        // Обновляем графики при загрузке страницы
+        // Вызываем updateGraphs при загрузке страницы
+        console.log('DOM загружен');
         updateGraphs();
     } else {
         console.log('Графики: контейнер не найден');
     }
+
+    // Добавляем обработчики для кнопок управления временным окном
+    const prevButton = document.getElementById('prev-window');
+    const nextButton = document.getElementById('next-window');
+
+    if (prevButton && nextButton) {
+        prevButton.addEventListener('click', () => {
+            if (currentTimeWindow > 0) {
+                currentTimeWindow--;
+                updateGraphs();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            const filenameElement = document.querySelector('.success-message');
+            if (filenameElement) {
+                const filename = filenameElement.textContent.replace('Загружен файл: ', '').trim();
+                fetch(`/get_data?filename=${encodeURIComponent(filename)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                            const maxTime = Math.max(...data.messages.map(msg => msg.time));
+                            if ((currentTimeWindow + 1) * 5 < maxTime) {
+                                currentTimeWindow++;
+                                updateGraphs();
+                            }
+                        }
+                    });
+            }
+        });
+    }
 });
+
+function createFrequencyGraph(messages) {
+    try {
+        console.log('Создание частотного графика с данными:', messages);
+        
+        // Группируем сообщения по PID
+        const messagesByPid = {};
+        messages.forEach(msg => {
+            if (!messagesByPid[msg.pid]) {
+                messagesByPid[msg.pid] = [];
+            }
+            messagesByPid[msg.pid].push(msg);
+        });
+
+        console.log('Сгруппированные сообщения по PID:', messagesByPid);
+
+        // Сортируем сообщения по времени для каждого PID
+        Object.keys(messagesByPid).forEach(pid => {
+            messagesByPid[pid].sort((a, b) => a.time - b.time);
+        });
+
+        // Определяем временное окно
+        const windowSize = 5; // 5 секунд
+        const startTime = currentTimeWindow * windowSize;
+        const endTime = startTime + windowSize;
+
+        // Создаем данные для графика
+        const traces = Object.keys(messagesByPid).map((pid, index) => {
+            const pidMessages = messagesByPid[pid].filter(msg => 
+                msg.time >= startTime && msg.time < endTime
+            );
+            const times = pidMessages.map(msg => msg.time);
+            
+            console.log(`PID ${pid}: ${times.length} сообщений, времена:`, times);
+            
+            return {
+                x: times,
+                y: Array(times.length).fill(index),
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: {
+                    width: 2,
+                    color: `hsl(${index * 30}, 70%, 50%)`
+                },
+                marker: {
+                    size: 8,
+                    color: `hsl(${index * 30}, 70%, 50%)`,
+                    symbol: 'line-ns-open'
+                },
+                name: `PID ${parseInt(pid).toString(16).toUpperCase()}`,
+                showlegend: true
+            };
+        });
+
+        // Настройки графика
+        const layout = {
+            title: {
+                text: `Временная диаграмма сообщений (${startTime.toFixed(1)}с - ${endTime.toFixed(1)}с)`,
+                font: {
+                    size: 14
+                }
+            },
+            xaxis: {
+                title: 'Время (с)',
+                gridcolor: '#ddd',
+                showgrid: true,
+                showspikes: false,
+                fixedrange: true,
+                tickformat: '.3f',
+                range: [startTime, endTime]
+            },
+            yaxis: {
+                title: '',
+                gridcolor: '#ddd',
+                showgrid: true,
+                range: [-1, traces.length],
+                showticklabels: false,
+                zeroline: false
+            },
+            plot_bgcolor: 'white',
+            paper_bgcolor: 'white',
+            showlegend: true,
+            legend: {
+                orientation: 'h',
+                y: -0.2
+            },
+            hovermode: 'closest',
+            margin: {
+                l: 50,
+                r: 20,
+                t: 40,
+                b: 40
+            },
+            dragmode: false
+        };
+
+        // Создаем график
+        Plotly.newPlot('frequency-graph', traces, layout, {
+            displayModeBar: false,
+            responsive: true
+        });
+
+    } catch (error) {
+        console.error('Ошибка при создании графика:', error);
+        document.getElementById('frequency-graph').innerHTML = '<div class="error-message">Ошибка при создании графика: ' + error.message + '</div>';
+    }
+}
+
+// Функция для подготовки данных графика на клиенте (если не подготовлены на сервере)
+function prepareGraphData(messages) {
+    const messagesByPid = {};
+    messages.forEach(msg => {
+        if (!messagesByPid[msg.pid]) {
+            messagesByPid[msg.pid] = [];
+        }
+        messagesByPid[msg.pid].push(msg);
+    });
+
+    return Object.entries(messagesByPid).map(([pid, msgs]) => ({
+        pid: parseInt(pid),
+        times: msgs.map(msg => msg.time).sort((a, b) => a - b)
+    }));
+}
 </script>
 {% endblock %} 

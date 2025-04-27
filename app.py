@@ -109,6 +109,9 @@ def save_processed_data(messages, filename):
         processed_filename = f"processed_{filename}"
         processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], processed_filename)
         
+        print(f"Сохранение обработанных данных в файл: {processed_filepath}")
+        print(f"Количество сообщений для сохранения: {len(messages)}")
+        
         # Сохраняем данные в JSON файл, каждое сообщение в отдельной строке
         with open(processed_filepath, 'w', encoding='utf-8') as f:
             for msg in messages:
@@ -121,8 +124,10 @@ def save_processed_data(messages, filename):
                 json.dump(data_to_save, f, ensure_ascii=False)
                 f.write('\n')  # Добавляем перенос строки после каждого сообщения
             
+        print(f"Файл успешно сохранен: {processed_filepath}")
         return processed_filename
     except Exception as e:
+        print(f"Ошибка при сохранении обработанных данных: {str(e)}")
         return None
 
 def process_csv_data(csv_data):
@@ -336,7 +341,7 @@ def get_data():
                     messages_data.append(json.loads(line))
         
         return jsonify({'messages': messages_data})
-    
+        
     except Exception as e:
         return jsonify({'error': f'Ошибка загрузки данных: {str(e)}'}), 500
 
