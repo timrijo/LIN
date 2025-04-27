@@ -41,7 +41,7 @@ class LinMsg:
                 
             try:
                 # Проверяем минимальное количество столбцов
-                if len(row) < 7:  # Минимум 7 столбцов: время, Break, время, SYNC, время, PID, время
+                if len(row) < 6:  # Минимум 7 столбцов: время, Break, время, SYNC, время, PID
                     continue
                     
                 # Столбец 0: время начала сообщения
@@ -89,12 +89,14 @@ class LinMsg:
                     crc = None
                 
                 # Проверка CRC
-                if crc is not None and msg_pid is not None and all(x is not None for x in data):
-                    crc_enhanced = calculate_crc_enhanced(data, msg_pid)
-                    
-                    # Если CRC не совпадает ни с одним из методов, пропускаем сообщение
-                    if crc != crc_enhanced:
-                        continue
+                if crc is not None and msg_pid is not None:
+                    # Проверяем, есть ли данные D
+                    if all(x is not None for x in data):
+                        crc_enhanced = calculate_crc_enhanced(data, msg_pid)
+                        
+                        # Если CRC не совпадает ни с одним из методов, пропускаем сообщение
+                        if crc != crc_enhanced:
+                            continue
                 
                 # Создаем объект сообщения
                 msg = cls(msg_pid, data, crc, time_value)

@@ -34,16 +34,16 @@ def upload():
     if request.method == 'POST':
         try:
             if 'file' not in request.files:
-                flash('No file part', 'error')
+                flash('Файл не был выбран', 'error')
                 return redirect(request.url)
             
             file = request.files['file']
             if file.filename == '':
-                flash('No selected file', 'error')
+                flash('Файл не выбран', 'error')
                 return redirect(request.url)
             
             if not allowed_file(file.filename):
-                flash('Invalid file type. Please upload a CSV file.', 'error')
+                flash('Недопустимый тип файла. Пожалуйста, загрузите CSV-файл.', 'error')
                 return redirect(request.url)
             
             filename = secure_filename(file.filename)
@@ -51,7 +51,7 @@ def upload():
             
             # Проверяем, не существует ли уже файл с таким именем
             if os.path.exists(filepath):
-                flash('File with this name already exists', 'error')
+                flash('Файл с таким именем уже существует', 'error')
                 return redirect(request.url)
             
             # Сохраняем файл
@@ -60,7 +60,7 @@ def upload():
             # Проверяем, что файл не пустой
             if os.path.getsize(filepath) == 0:
                 os.remove(filepath)
-                flash('Uploaded file is empty', 'error')
+                flash('Загруженный файл пустой', 'error')
                 return redirect(request.url)
             
             # Обрабатываем CSV файл
@@ -70,14 +70,14 @@ def upload():
                 
                 if not csv_data.strip():
                     os.remove(filepath)
-                    flash('CSV file is empty', 'error')
+                    flash('CSV-файл пустой', 'error')
                     return redirect(request.url)
                 
                 messages = LinMsg.process_csv_data(csv_data)
                 
                 if not messages:
                     os.remove(filepath)
-                    flash('No valid LIN messages found in the file', 'error')
+                    flash('В файле не найдено допустимых LIN-сообщений', 'error')
                     return redirect(request.url)
                 
                 # Сохраняем обработанные данные
@@ -86,21 +86,21 @@ def upload():
                 if processed_filename:
                     # Удаляем исходный CSV файл, так как данные уже обработаны и сохранены
                     os.remove(filepath)
-                    flash('File successfully uploaded and processed', 'success')
+                    flash('Файл успешно загружен и обработан', 'success')
                     return redirect(url_for('data', filename=filename))
                 else:
                     os.remove(filepath)
-                    flash('Error processing file', 'error')
+                    flash('Ошибка при обработке файла', 'error')
                     return redirect(request.url)
                     
             except Exception as e:
                 if os.path.exists(filepath):
                     os.remove(filepath)
-                flash(f'Error processing file: {str(e)}', 'error')
+                flash(f'Ошибка при обработке файла: {str(e)}', 'error')
                 return redirect(request.url)
                 
         except Exception as e:
-            flash(f'Error uploading file: {str(e)}', 'error')
+            flash(f'Ошибка при загрузке файла: {str(e)}', 'error')
             return redirect(request.url)
             
     return render_template('upload.html')
