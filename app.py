@@ -3,7 +3,6 @@ from werkzeug.utils import secure_filename
 import os
 from lin_msg import LinMsg
 import json
-from crc import calculate_crc_enhanced
 from auth import auth, db, login_manager
 from flask_login import login_required
 

@@ -2,6 +2,7 @@ import csv
 import os
 import json
 from flask import current_app
+from crc import calculate_crc_enhanced
 
 class LinMsg:
     def __init__(self, msg_pid=None, data=None, crc=None, time=None):
@@ -89,7 +90,6 @@ class LinMsg:
                 
                 # Проверка CRC
                 if crc is not None and msg_pid is not None and all(x is not None for x in data):
-                    from crc import calculate_crc_enhanced
                     crc_enhanced = calculate_crc_enhanced(data, msg_pid)
                     
                     # Если CRC не совпадает ни с одним из методов, пропускаем сообщение
