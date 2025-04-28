@@ -29,125 +29,53 @@
             background-color: rgba(0, 0, 0, 0.7) !important;
         }
         
-        /* Унифицированный стиль для всех кнопок и элементов управления */
-        .button, 
-        .control-button, 
-        .id-checkbox-label,
-        .drop-zone__button,
-        .id-checkbox,
+        /* Стили для всех кнопок */
+        .button,
         input[type="submit"],
-        input[type="button"] {
-            padding: 8px 15px;
-            background-color: #000000;
-            border: 1px solid #000000;
-            cursor: pointer;
-            color: #ffffff;
-            text-align: center;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            transition: background-color 0.2s, border-color 0.2s;
-            margin-bottom: 5px;
+        input[type="button"],
+        button {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border-color: #000000 !important;
         }
 
-        .button:hover, 
-        .control-button:hover, 
-        .id-checkbox-label:hover,
-        .drop-zone__button:hover,
+        .button:hover,
         input[type="submit"]:hover,
-        input[type="button"]:hover {
-            background-color: #333333;
-            border-color: #333333;
+        input[type="button"]:hover,
+        button:hover {
+            background-color: #333333 !important;
+            border-color: #333333 !important;
+            color: #ffffff !important;
         }
 
-        .button:active, 
-        .control-button:active, 
-        .id-checkbox-label:active,
-        .drop-zone__button:active,
-        input[type="submit"]:active,
-        input[type="button"]:active {
-            background-color: #555555;
-        }
-
-        .button:focus, 
-        .control-button:focus, 
-        .id-checkbox-label:focus,
-        .drop-zone__button:focus,
+        .button:focus,
         input[type="submit"]:focus,
-        input[type="button"]:focus {
+        input[type="button"]:focus,
+        button:focus {
             outline: none;
             box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
         }
 
-        /* Специальные стили для чекбоксов */
-        .id-checkbox, input[type="checkbox"] {
-            padding: 0;
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-            vertical-align: middle;
-            position: relative;
-            top: -1px;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-        }
-
-        /* Стиль для меток чекбоксов */
-        .id-checkbox-label, label.checkbox {
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            background-color: transparent;
-            border: none;
-            color: #000000;
-        }
-
-        .id-checkbox-label:hover, label.checkbox:hover {
-            background-color: #f0f0f0;
-            border-radius: 4px;
-        }
-
-        /* Стиль для кнопок в селекторе ID */
-        .id-selector .control-button {
-            margin-bottom: 10px;
-        }
-
-        /* Стиль для кнопок в заголовке */
-        .title-container .control-button {
-            width: auto;
-            min-width: 150px;
-            margin: 10px auto;
-            display: block;
-        }
-
-        /* Стиль для кнопок в зоне загрузки */
-        .drop-zone__button {
-            margin-top: 15px;
-            width: auto;
-            min-width: 120px;
-        }
-
-        /* Стиль для ссылок, оформленных как кнопки */
-        a.control-button, a.button {
-            text-decoration: none;
-            display: inline-block;
-        }
-        
         /* Переопределение стилей Bulma */
         .button.is-info {
-            background-color: #000000;
-            border-color: #000000;
+            background-color: #000000 !important;
+            border-color: #000000 !important;
+            color: #ffffff !important;
         }
         
         .button.is-info:hover {
-            background-color: #333333;
-            border-color: #333333;
+            background-color: #333333 !important;
+            border-color: #333333 !important;
+            color: #ffffff !important;
         }
         
         .button.is-block {
             width: 100%;
+        }
+
+        /* Стили для уведомлений */
+        .notification {
+            margin-bottom: 1rem;
         }
     </style>
 </head>
