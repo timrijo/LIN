@@ -1,10 +1,265 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="title" style="color: #000000;">
-    LIN
-</h1>
-<h2 class="subtitle" style="color: #000000;">
-    Анализатор LIN протокола
-</h2>
+<style>
+    .calculator-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .title {
+        color: #000000 !important;
+        text-align: center;
+        margin-bottom: 30px;
+        font-weight: bold;
+        font-size: 24px;
+    }
+
+    .calculator-section {
+        background-color: #ffffff;
+        border: 1px solid #808080;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .calculator-section h2 {
+        color: #000000;
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .input-group {
+        margin-bottom: 15px;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #000000;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #808080;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: #000000;
+    }
+
+    .button {
+        background-color: #f0f0f0;
+        border: 1px solid #808080;
+        padding: 8px 15px;
+        cursor: pointer;
+        color: #000000;
+        border-radius: 3px;
+        font-size: 14px;
+    }
+
+    .button:hover {
+        background-color: #e0e0e0;
+    }
+
+    .result {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 3px;
+        font-family: monospace;
+        color: #000000;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 5px;
+        font-size: 12px;
+    }
+
+    .hex-prefix {
+        color: #666666;
+    }
+
+    .data-bytes-container {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .data-byte-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #808080;
+        border-radius: 3px;
+        font-family: monospace;
+        text-align: center;
+    }
+
+    .data-byte-input:focus {
+        outline: none;
+        border-color: #000000;
+    }
+
+    .result-section {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 3px;
+    }
+
+    .result-item {
+        margin-bottom: 10px;
+        font-family: monospace;
+        color: #000000;
+    }
+</style>
+
+<div class="calculator-container">
+    <h1 class="title">LIN Калькулятор</h1>
+
+    <div class="calculator-section">
+        <form id="lin-form">
+            <div class="input-group">
+                <label for="id-input">Защищенный идентификатор (0-0x3F):</label>
+                <input type="text" id="id-input" name="id" placeholder="Введите значение (например, 0x3F)">
+                <div id="id-error" class="error-message"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Байты данных (0-0xFF):</label>
+                <div class="data-bytes-container">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D0">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D1">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D2">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D3">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D4">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D5">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D6">
+                    <input type="text" class="data-byte-input" name="data[]" maxlength="2" placeholder="D7">
+                </div>
+                <div id="data-error" class="error-message"></div>
+            </div>
+
+            <button type="submit" class="button">Рассчитать сообщение</button>
+        </form>
+
+        <div id="result-section" class="result-section" style="display: none;">
+            <div class="result-item" id="pid-result"></div>
+            <div class="result-item" id="crc-result"></div>
+            <div class="result-item" id="message-result"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('lin-form');
+    const idInput = document.getElementById('id-input');
+    const dataInputs = document.querySelectorAll('.data-byte-input');
+    const resultSection = document.getElementById('result-section');
+    const pidResult = document.getElementById('pid-result');
+    const crcResult = document.getElementById('crc-result');
+    const messageResult = document.getElementById('message-result');
+    const idError = document.getElementById('id-error');
+    const dataError = document.getElementById('data-error');
+
+    function parseHexValue(value) {
+        if (!value) return null;
+        if (value.startsWith('0x')) {
+            return parseInt(value.substring(2), 16);
+        }
+        return parseInt(value, 16);
+    }
+
+    function validateInputs() {
+        let isValid = true;
+        idError.textContent = '';
+        dataError.textContent = '';
+
+        // Validate ID
+        const idValue = parseHexValue(idInput.value);
+        if (idValue === null || isNaN(idValue) || idValue < 0 || idValue > 0x3F) {
+            idError.textContent = 'ID должен быть между 0 и 0x3F';
+            isValid = false;
+        }
+
+        // Validate data bytes
+        const dataBytes = Array.from(dataInputs).map(input => {
+            const value = parseHexValue(input.value);
+            if (value !== null && (isNaN(value) || value < 0 || value > 0xFF)) {
+                dataError.textContent = 'Байты данных должны быть между 0 и 0xFF';
+                isValid = false;
+            }
+            return value;
+        });
+
+        return isValid ? { id: idValue, data: dataBytes } : null;
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const inputData = validateInputs();
+        if (!inputData) return;
+
+        // Prepare data for server
+        const data = {
+            id: inputData.id,
+            data: inputData.data.filter(byte => byte !== null)
+        };
+
+        // Send data to server
+        fetch('/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Display results
+            pidResult.textContent = `PID: 0x${data.pid.toString(16).toUpperCase().padStart(2, '0')}`;
+            crcResult.textContent = `CRC: 0x${data.crc.toString(16).toUpperCase().padStart(2, '0')}`;
+            
+            // Format message
+            const message = `Сообщение: ${data.message.map(b => `0x${b.toString(16).toUpperCase().padStart(2, '0')}`).join(' ')}`;
+            messageResult.textContent = message;
+            
+            resultSection.style.display = 'block';
+        })
+        .catch(error => {
+            dataError.textContent = `Ошибка: ${error.message}`;
+            resultSection.style.display = 'none';
+        });
+    });
+
+    // Add input validation for data bytes
+    dataInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Remove non-hex characters
+            this.value = this.value.replace(/[^0-9A-Fa-f]/g, '');
+            
+            // Limit to 2 characters
+            if (this.value.length > 2) {
+                this.value = this.value.slice(0, 2);
+            }
+        });
+    });
+});
+</script>
 {% endblock %} 

@@ -2,7 +2,7 @@ import csv
 import os
 import json
 from flask import current_app
-from crc import calculate_crc_enhanced
+from crc import calculate_crc_enhanced, calculate_pid
 
 class LinMsg:
     def __init__(self, msg_pid=None, data=None, crc=None, time=None):

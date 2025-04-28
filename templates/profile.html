@@ -1,7 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="title">
-    Добро пожаловать, {{ name }}!
-</h1>
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Профиль</h3>
+    <div class="box">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="notification is-{{ 'success' if category == 'success' else 'danger' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('auth.change_password') }}">
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="current_password" placeholder="Текущий пароль" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="new_password" placeholder="Новый пароль" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="confirm_password" placeholder="Подтвердите новый пароль" required>
+                </div>
+            </div>
+
+            <button class="button is-block is-info is-large is-fullwidth">Изменить пароль</button>
+        </form>
+    </div>
+</div>
 {% endblock %} 

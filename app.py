@@ -4,7 +4,9 @@ import os
 from lin_msg import LinMsg
 import json
 from auth import auth, db, login_manager
-from flask_login import login_required
+from flask_login import login_required, current_user
+from crc import calculate_pid, calculate_crc_enhanced
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -22,8 +24,14 @@ login_manager.init_app(app)
 app.register_blueprint(auth)
 
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
+
+@app.route('/calculator')
+@login_required
+def calculator():
+    return render_template('calculator.html')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -162,6 +170,52 @@ def data():
         if is_json:
             return jsonify({'error': error}), 500
         return render_template('data.html', error=error)
+
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    try:
+        data = request.get_json()
+        
+        # Проверяем входные данные
+        if not data or 'id' not in data or 'data' not in data:
+            return jsonify({'error': 'Неверные входные данные'}), 400
+            
+        protected_id = data['id']
+        data_bytes = data['data']
+        
+        # Проверяем ID
+        if not isinstance(protected_id, int) or protected_id < 0 or protected_id > 0x3F:
+            return jsonify({'error': 'ID должен быть между 0 и 0x3F'}), 400
+            
+        # Проверяем байты данных
+        if not isinstance(data_bytes, list):
+            return jsonify({'error': 'Данные должны быть массивом'}), 400
+            
+        for byte in data_bytes:
+            if not isinstance(byte, int) or byte < 0 or byte > 0xFF:
+                return jsonify({'error': 'Байты данных должны быть между 0 и 0xFF'}), 400
+        
+        # Создаем объект LinMsg с protected_id как pid
+        lin_msg = LinMsg(msg_pid=protected_id, data=data_bytes)
+        
+        # Вычисляем PID и CRC используя функции из crc.py
+        pid = calculate_pid(protected_id)
+        crc = calculate_crc_enhanced(data_bytes, protected_id)
+        
+        if pid is None or crc is None:
+            return jsonify({'error': 'Ошибка при вычислении PID или CRC'}), 500
+        
+        # Подготавливаем ответ
+        response = {
+            'pid': pid,
+            'crc': crc,
+            'message': [pid] + data_bytes + [crc]
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():

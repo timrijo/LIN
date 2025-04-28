@@ -13,9 +13,14 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(100))
     name = db.Column(db.String(1000))
 
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+
 # Инициализация менеджера авторизации
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
+login_manager.login_message = 'Пожалуйста, войдите для доступа к этой странице'
+login_manager.login_message_category = 'info'
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -73,4 +78,33 @@ def logout():
 @auth.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', name=current_user.name) 
+    return render_template('profile.html', name=current_user.name)
+
+@auth.route('/profile/change_password', methods=['POST'])
+@login_required
+def change_password():
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    
+    # Проверяем текущий пароль
+    if not current_user.check_password(current_password):
+        flash('Неверный текущий пароль', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Проверяем совпадение новых паролей
+    if new_password != confirm_password:
+        flash('Новые пароли не совпадают', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Обновляем пароль
+    current_user.password = generate_password_hash(new_password)
+    try:
+        db.session.commit()
+        flash('Пароль успешно изменен', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при изменении пароля', 'error')
+        print(f"Ошибка при изменении пароля: {str(e)}")
+    
+    return redirect(url_for('auth.profile')) 

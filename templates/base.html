@@ -159,7 +159,7 @@
                     <div id="navbarMenuHeroA" class="navbar-menu">
                         <div class="navbar-end">
                             <a href="{{ url_for('index') }}" class="navbar-item">
-                                Главная
+                                Калькулятор
                             </a>
                             <a href="{{ url_for('data') }}" class="navbar-item">
                                 Данные
@@ -169,11 +169,11 @@
                                 Профиль
                             </a>
                             <a href="{{ url_for('auth.logout') }}" class="navbar-item">
-                                Выйти
+                                Выход
                             </a>
                             {% else %}
                             <a href="{{ url_for('auth.login') }}" class="navbar-item">
-                                Войти
+                                Вход
                             </a>
                             <a href="{{ url_for('auth.signup') }}" class="navbar-item">
                                 Регистрация
