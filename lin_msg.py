@@ -2,7 +2,7 @@ import csv
 import os
 import json
 from flask import current_app
-from crc import calculate_crc_enhanced, calculate_pid
+from crc import calculate_crc_enhanced
 
 class LinMsg:
     def __init__(self, msg_pid=None, data=None, crc=None, time=None):
@@ -56,7 +56,6 @@ class LinMsg:
                     continue
                 
                 # Столбец 5: PID
-                msg_pid = None
                 if row[5].startswith('0x'):
                     msg_pid = int(row[5], 16)
                 else:
@@ -64,7 +63,6 @@ class LinMsg:
                 
                 # Обрабатываем данные (столбцы 7 и далее через один)
                 data = []
-                crc = None
                 
                 # Начинаем с 7-го столбца и берем каждый второй столбец до предпоследнего
                 for i in range(7, len(row) - 1, 2):
@@ -101,7 +99,7 @@ class LinMsg:
                 # Создаем объект сообщения
                 msg = cls(msg_pid, data, crc, time_value)
                 messages.append(msg)
-                
+
             except Exception:
                 continue
         
@@ -131,7 +129,7 @@ class LinMsg:
                         'data': msg.data,
                         'crc': msg.crc,
                         'time': msg.time
-                    }, f, ensure_ascii=False)
+                    }, f, ensure_ascii=False) # type: ignore # стандартная запись
                     f.write('\n')
                     
             return processed_filepath

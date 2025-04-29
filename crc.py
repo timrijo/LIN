@@ -1,4 +1,4 @@
-def calculate_pid(id):
+def calculate_pid(lin_id):
     """
     Вычисление Protected ID (PID) из ID путем добавления битов четности
     PID[0:5] = ID[0:5]
@@ -6,7 +6,7 @@ def calculate_pid(id):
     PID[7] = P1 (нечетная четность для ID[0:5])
     """
     # Извлекаем биты ID
-    id_bits = id & 0x3F  # Получаем 6 бит ID
+    id_bits = lin_id & 0x3F  # Получаем 6 бит ID
     
     # Вычисляем P0 (четная четность для ID[0:4])
     p0 = ((id_bits & 0x01) >> 0) ^ ((id_bits & 0x02) >> 1) ^ ((id_bits & 0x04) >> 2) ^ ((id_bits & 0x10) >> 4)
@@ -18,7 +18,7 @@ def calculate_pid(id):
     pid = ((p1 & 0x01) << 7) | ((p0 & 0x01) << 6) | id_bits
     return pid
 
-def calculate_crc_enhanced(data, id):
+def calculate_crc_enhanced(data, lin_id):
     """
     Вычисление CRC для сообщений LIN 2.0 (Расширенный метод)
     Расширенный CRC вычисляется как сумма всех байтов данных плюс protected ID
@@ -31,7 +31,7 @@ def calculate_crc_enhanced(data, id):
         int: Вычисленное значение CRC
     """
     # Вычисляем protected ID
-    pid = calculate_pid(id)
+    pid = calculate_pid(lin_id)
     
     # Начинаем с PID
     sum_with_carry = pid

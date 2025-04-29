@@ -1,12 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 from werkzeug.utils import secure_filename
 import os
 from lin_msg import LinMsg
 import json
 from auth import auth, db, login_manager
-from flask_login import login_required, current_user
+from flask_login import login_required
 from crc import calculate_pid, calculate_crc_enhanced
-from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -174,14 +173,14 @@ def data():
 @app.route('/calculate', methods=['POST'])
 def calculate():
     try:
-        data = request.get_json()
+        lin_data = request.get_json()
         
         # Проверяем входные данные
-        if not data or 'id' not in data or 'data' not in data:
+        if not lin_data or 'id' not in lin_data or 'data' not in lin_data:
             return jsonify({'error': 'Неверные входные данные'}), 400
             
-        protected_id = data['id']
-        data_bytes = data['data']
+        protected_id = lin_data['id']
+        data_bytes = lin_data['data']
         
         # Проверяем ID
         if not isinstance(protected_id, int) or protected_id < 0 or protected_id > 0x3F:
@@ -194,9 +193,6 @@ def calculate():
         for byte in data_bytes:
             if not isinstance(byte, int) or byte < 0 or byte > 0xFF:
                 return jsonify({'error': 'Байты данных должны быть между 0 и 0xFF'}), 400
-        
-        # Создаем объект LinMsg с protected_id как pid
-        lin_msg = LinMsg(msg_pid=protected_id, data=data_bytes)
         
         # Вычисляем PID и CRC используя функции из crc.py
         pid = calculate_pid(protected_id)
